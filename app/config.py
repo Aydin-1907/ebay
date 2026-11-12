@@ -63,6 +63,13 @@ class Settings(BaseSettings):
 
     # --- Datenbank ---
     database_url: str = "sqlite:///./data/ebay_store.db"
+    # Supabase: Die PostgreSQL-URL wird fuer den einmaligen SQLite-Import genutzt;
+    # der Storage-Schluessel bleibt ausschliesslich auf dem Server und gehoert nie
+    # in Git oder in den Browser.
+    supabase_url: str = ""
+    supabase_service_role_key: str = ""
+    supabase_assets_bucket: str = "studio-assets"
+    supabase_invoices_bucket: str = "studio-invoices"
 
     # --- eBay ---
     ebay_client_id: str = ""

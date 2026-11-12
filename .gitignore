@@ -25,6 +25,7 @@ __pycache__/
 .venv/
 .venv-mcp/
 .venv-codex*/
+.venv-supabase/
 venv/
 .pytest_cache/
 .pytest_tmp/
