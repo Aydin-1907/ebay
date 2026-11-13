@@ -23,6 +23,7 @@ backups/
 __pycache__/
 *.py[cod]
 .venv/
+.venv_cloud/
 .venv-mcp/
 .venv-codex*/
 .venv-supabase/
