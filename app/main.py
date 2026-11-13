@@ -180,8 +180,20 @@ def studio_bild(name: str, breite: int | None = None, zuschnitt: bool = False) -
     ordner = Path(get_settings().studio_image_dir).resolve()
     ziel = (ordner / name).resolve()
     # Kein Ausbrechen aus dem Bildordner ueber Pfadangaben wie ../
-    if not str(ziel).startswith(str(ordner)) or not ziel.is_file():
+    if not str(ziel).startswith(str(ordner)):
         raise HTTPException(status_code=404, detail="Nicht gefunden")
+    if not ziel.is_file():
+        from app.supabase_storage import StorageError, private_file
+
+        try:
+            remote = private_file(
+                get_settings().supabase_assets_bucket, name, media_type="image/png"
+            )
+        except StorageError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+        if remote is None:
+            raise HTTPException(status_code=404, detail="Nicht gefunden")
+        return remote
 
     # Verkleinert ausliefern, wenn eine Breite gewuenscht ist. Ohne Angabe geht
     # weiterhin das Original raus - der Druckweg braucht die vollen 4500 Pixel.
@@ -211,9 +223,19 @@ def studio_datei(name: str) -> FileResponse:
 
     ordner = Path(get_settings().studio_image_dir).resolve()
     ziel = (ordner / name).resolve()
-    if not str(ziel).startswith(str(ordner)) or not ziel.is_file():
+    if not str(ziel).startswith(str(ordner)):
         raise HTTPException(status_code=404, detail="Nicht gefunden")
     typ = "application/pdf" if ziel.suffix.lower() == ".pdf" else "application/octet-stream"
+    if not ziel.is_file():
+        from app.supabase_storage import StorageError, private_file
+
+        try:
+            remote = private_file(get_settings().supabase_assets_bucket, name, media_type=typ, filename=ziel.name)
+        except StorageError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+        if remote is None:
+            raise HTTPException(status_code=404, detail="Nicht gefunden")
+        return remote
     return FileResponse(ziel, media_type=typ, filename=ziel.name)
 
 
@@ -236,10 +258,25 @@ def studio_druckdatei(name: str):
 
     ordner = (Path(get_settings().studio_image_dir) / DRUCK_ORDNER).resolve()
     ziel = (ordner / name).resolve()
-    if not str(ziel).startswith(str(ordner)) or not ziel.is_file():
+    if not str(ziel).startswith(str(ordner)):
         raise HTTPException(status_code=404, detail="Nicht gefunden")
 
     typ = "image/svg+xml" if ziel.suffix.lower() == ".svg" else "image/png"
+    if not ziel.is_file():
+        from app.supabase_storage import StorageError, private_file
+
+        try:
+            remote = private_file(
+                get_settings().supabase_assets_bucket,
+                f"{DRUCK_ORDNER}/{name}",
+                media_type=typ,
+                filename=ziel.name,
+            )
+        except StorageError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+        if remote is None:
+            raise HTTPException(status_code=404, detail="Nicht gefunden")
+        return remote
     return FileResponse(ziel, media_type=typ, filename=ziel.name)
 
 

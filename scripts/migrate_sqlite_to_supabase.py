@@ -46,7 +46,7 @@ def create_target_engine(url: str) -> Engine:
 
 
 def main() -> None:
-    source_url = os.getenv("DATABASE_URL", "")
+    source_url = os.getenv("LOCAL_DATABASE_URL", os.getenv("DATABASE_URL", ""))
     target_url = os.getenv("SUPABASE_DATABASE_URL", "")
     if not source_url.startswith("sqlite"):
         fail("DATABASE_URL muss fuer den Import noch auf die lokale SQLite-Datei zeigen.")

@@ -28,11 +28,13 @@ def upload_tree(
             continue
         key = file_path.relative_to(source).as_posix()
         content_type = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
-        response = client.post(
-            f"{base_url}/storage/v1/object/{bucket}/{quote(key, safe='/')}",
-            headers={**headers, "Content-Type": content_type, "x-upsert": "true"},
-            content=file_path.read_bytes(),
-        )
+        print(f"Upload: {bucket}/{key}", flush=True)
+        with file_path.open("rb") as content:
+            response = client.post(
+                f"{base_url}/storage/v1/object/{bucket}/{quote(key, safe='/')}",
+                headers={**headers, "Content-Type": content_type, "x-upsert": "true"},
+                content=content,
+            )
         response.raise_for_status()
         uploaded += 1
         print(f"  {bucket}/{key}")
@@ -48,7 +50,8 @@ def main() -> None:
         raise SystemExit("SUPABASE_SERVICE_ROLE_KEY fehlt. Den vorhandenen Secret Key aus Supabase in .env eintragen.")
 
     headers = {"apikey": service_key, "Authorization": f"Bearer {service_key}"}
-    with httpx.Client(timeout=90) as client:
+    timeout = httpx.Timeout(connect=10, read=30, write=90, pool=10)
+    with httpx.Client(timeout=timeout) as client:
         assets = upload_tree(
             client,
             source=ROOT / "data" / "studio_images",
