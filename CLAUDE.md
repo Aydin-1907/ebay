@@ -89,8 +89,9 @@ benutzt.
   einen Ausweis-Scan und die Gewerbeanmeldung. Aus der Nachverfolgung sind sie
   raus, aus der Geschichte nicht. Entweder bereinigen oder das Archiv frisch
   aufsetzen.
-- **Keine Sicherung außer Haus.** Weder dieses Projekt noch das gebündelte
-  Vorprojekt (`docs/vorprojekt/pod-shop-historie.bundle`) liegen irgendwo sonst.
+- **Keine Sicherung außer Haus.** Dieses Projekt liegt irgendwo sonst nicht. Das
+  gebündelte Vorprojekt (`docs/vorprojekt/`) wurde auf Wunsch entfernt und
+  existiert damit nirgends mehr.
 
 ## Erledigt, damit es niemand doppelt sucht
 
