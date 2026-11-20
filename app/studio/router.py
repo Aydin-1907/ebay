@@ -1092,6 +1092,14 @@ def radar_random_kollektion(db: Session = Depends(get_db)) -> dict:
     return random_kollektion.lade(db)
 
 
+@router.post("/radar/gothic-kollektion")
+def radar_gothic_kollektion(db: Session = Depends(get_db)) -> dict:
+    """Skelette bei Alltaeglichem und angsteinfloessende Kreaturen. Kostenlos, erzeugt kein Bild."""
+    from app.studio.radar import gothic_kollektion
+
+    return gothic_kollektion.lade(db)
+
+
 @router.post("/radar/stadtliebe-kollektion")
 def radar_stadtliebe_kollektion(db: Session = Depends(get_db)) -> dict:
     """Minimalistische Stadtmotive (ohne Vereinsbezug) als Empfehlungen laden. Kostenlos."""
