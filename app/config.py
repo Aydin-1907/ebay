@@ -112,7 +112,14 @@ class Settings(BaseSettings):
     # abgefragt 13.09.2026) - ein freier Wert faellt aus dem Groessenfilter.
     # Gilt fuer T-Shirt, Polo und Hoodie; Oversize hat seinen eigenen Lauf (S-3XL).
     ebay_textil_groessen: str = "XS,S,M,L,XL,2XL,3XL"
-    ebay_menge_je_variante: int = 10                 # auf Bestellung gedruckt
+    # War 10: bei 42 Varianten (7 Farben x 6 Groessen) je T-Shirt meldete das
+    # 420 Stueck "Lagerbestand" pro Design an eBay (10.458 EUR Warenwert fuer
+    # EIN Motiv bei 24,90 EUR) - obwohl bei Print-on-Demand nichts real auf
+    # Lager liegt. Das riss das monatliche eBay-Wertlimit (Fund 20.11.2026,
+    # eBay-Fehler 25002) schon beim ersten Design auf. 1 ist ehrlicher (echter
+    # Bestand: null, nachbestellbar bei jeder Order) und senkt den gemeldeten
+    # Wert je Design um den Faktor 10.
+    ebay_menge_je_variante: int = 1                  # auf Bestellung gedruckt
     ebay_produktfarbe: str = "Weiß"                  # Farbe der Ware im Produktbild
     ebay_marke: str = "medienwerk"
     # Preise inkl. Versand ueberschreiben, z. B. "tshirt=15.90,tasse=12.90".
