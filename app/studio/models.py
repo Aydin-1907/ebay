@@ -210,6 +210,33 @@ class PodLedgerEntry(TimestampMixin, Base):
     note: Mapped[Optional[str]] = mapped_column(Text)
 
 
+FLOP_STATUS = ("offen", "behalten", "geloescht")
+
+
+class StudioFlopVorschlag(TimestampMixin, Base):
+    """Ein POD-Angebot mit schwachen Zahlen - eine Beobachtung, keine Entscheidung.
+
+    Taeglich neu bewertet (``app/studio/optimierung.py``). ``status`` haelt die
+    MENSCHLICHE Entscheidung fest: ein spaeterer Lauf darf "behalten" oder
+    "geloescht" nie stillschweigend wieder auf "offen" zuruecksetzen (Eiserne
+    Regel 1/2 - propose-only, nie automatisch loeschen).
+    """
+
+    __tablename__ = "studio_flop_vorschlaege"
+    __table_args__ = (Index("idx_flop_status", "status"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    listing_id: Mapped[int] = mapped_column(ForeignKey("pod_listings.id"), unique=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="offen")
+    aufrufe_7t: Mapped[Optional[int]] = mapped_column()
+    verkaeufe_7t: Mapped[Optional[int]] = mapped_column()
+    grund: Mapped[Optional[str]] = mapped_column(String(255))
+    # Offene Idee aus dem Trend-Radar (studio_motiv_ideen) als Ersatzvorschlag -
+    # verknuepft, nicht automatisch erzeugt (kostet sonst Geld ohne Klick).
+    ersatz_idee_id: Mapped[Optional[int]] = mapped_column(ForeignKey("studio_motiv_ideen.id"))
+    entschieden_am: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+
+
 class StudioPreis(TimestampMixin, Base):
     """Vom Betreiber im Studio eingestellter Verkaufspreis je Produktart.
 

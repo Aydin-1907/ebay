@@ -744,8 +744,10 @@ async def produktfotos(design: Any, p: Produkt, *, s: Settings, bildordner: Path
         ziel = bildordner / MOCKUP_ORDNER / str(design.id)
         vorher = set(ziel.glob("*.jpg")) if ziel.is_dir() else set()
         farbwerte = [(f, mockup_plan.farbe(f).hex if p.textil else "#FFFFFF") for f in farben(p)]
-        # Schrift ist weiss, nur auf weisser Ware schwarz (Vorgabe 18.09.2026).
-        weisse = [fw for fw in farbwerte if fw[1].upper() == "#FFFFFF"]
+        # Schrift ist weiss, nur auf HELLER Ware schwarz (Vorgabe 18.09.2026,
+        # auf Helligkeit statt Namen erweitert 14.11.2026 - sonst blieb "Sand"
+        # bei weisser, schlecht lesbarer Schrift).
+        weisse = [fw for fw in farbwerte if schriftfarbe.ist_helle_farbe(fw[1])]
         andere = [fw for fw in farbwerte if fw not in weisse]
 
         def _montiere(m: Path | None, h: Path | None, farbliste: list) -> dict:
@@ -795,7 +797,9 @@ async def produktfotos(design: Any, p: Produkt, *, s: Settings, bildordner: Path
     for f in farben(p):
         if not je_farbe.get(f):
             hexwert = mockup_plan.farbe(f).hex if p.textil else "#FFFFFF"
-            je_farbe[f] = [zeichne_ware(motiv, ordner / f"{p.key}-{_farbcode(f)}.jpg", p, hexwert)]
+            # Schrift ist weiss, nur auf heller Ware schwarz (s. Montage-Zweig oben).
+            quellmotiv = schriftfarbe.dunkle_fassung(motiv) if schriftfarbe.ist_helle_farbe(hexwert) else motiv
+            je_farbe[f] = [zeichne_ware(quellmotiv, ordner / f"{p.key}-{_farbcode(f)}.jpg", p, hexwert)]
     return {"je_farbe": je_farbe, "quelle": quelle, "fehlt": fehlt, "gerendert": gerendert}
 
 

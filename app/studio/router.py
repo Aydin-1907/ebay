@@ -40,6 +40,8 @@ from app.studio.schemas import (
     IdeeStatusIn,
     LinkIn,
     LinkOut,
+    MarktanalyseIn,
+    OptimierungEntscheidungIn,
     RadarErzeugenIn,
     RadarLaufIn,
     StudioStatus,
@@ -556,6 +558,7 @@ async def mockup_bilder(produkt: str = Query("tshirt"), farbe: str = Query("Wei√
     import asyncio
 
     from app.studio import ebay_weg, mockup_montage, mockup_plan, produktweg
+    from app.studio.postprocess import schriftfarbe
 
     p = ebay_weg.PRODUKTE.get(produkt)
     if p is None:
@@ -583,6 +586,11 @@ async def mockup_bilder(produkt: str = Query("tshirt"), farbe: str = Query("Wei√
             vorne, hinten = await asyncio.to_thread(
                 druckseiten.druckbilder, seiten, bildordner, produkt=p.key, textil=p.textil,
                 design_id=design.id, vorlagen_ordner=ordner)
+            if schriftfarbe.ist_helle_farbe(hexwert):
+                # Dieselbe Vorschau, die der Kaeufer spaeter sieht: weisse Schrift
+                # ist auf heller Ware schlecht lesbar (s. ebay_weg.produktfotos).
+                vorne = schriftfarbe.dunkle_fassung(vorne) if vorne else vorne
+                hinten = schriftfarbe.dunkle_fassung(hinten) if hinten else hinten
             fotos = await asyncio.to_thread(
                 mockup_montage.rendere, vorne, hinten=hinten, produkt=p.key, textil=p.textil,
                 ganzflaeche=True,
@@ -934,6 +942,30 @@ async def radar_trends(body: TrendLaufIn, db: Session = Depends(get_db)) -> dict
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
+@router.post("/radar/marktanalyse")
+async def radar_marktanalyse(body: MarktanalyseIn, db: Session = Depends(get_db)) -> dict:
+    """Was sich bei eBay wirklich verkauft (viele Verkaeufer) + daraus eigene,
+    unterscheidbare Empfehlungen im Trend-Radar ablegen. Erzeugt kein Bild.
+
+    Braucht ein bei eBay angemeldetes Browser-Profil (``LH_Sold=1`` verlangt
+    eine Anmeldung) - ohne sie bricht die Beobachtung mit klarer Meldung ab.
+    """
+    from app.studio.radar import marktanalyse, trends
+
+    beobachtung = await marktanalyse.beobachte(body.suchbegriffe)
+    kontext = marktanalyse.marktkontext(beobachtung["beobachtungen"])
+    try:
+        bericht = await trends.lauf(db, s=get_settings(), anzahl=body.anzahl,
+                                    kategorie=body.kategorie, marktkontext=kontext)
+    except kosten.BudgetErschoepft as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
+    except trends.TrendFehler as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    bericht["marktanalyse"] = {"beobachtungen": beobachtung["beobachtungen"],
+                               "fehler": beobachtung["fehler"]}
+    return bericht
+
+
 @router.get("/preise")
 def preise_stand(db: Session = Depends(get_db)) -> dict:
     """Verkaufspreise je Produktart samt Standardpreis. Aendert nichts."""
@@ -1100,3 +1132,158 @@ def radar_entwurf(idee_id: int, body: EntwurfIn | None = None,
             motivregeln.MotivartFehler) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return EntwurfOut(idee_id=idee.id, prompt=prompt)
+
+
+# --------------------------------------------------------------------------
+# Optimierung: Flop-Radar fuer eigene POD-Angebote
+# --------------------------------------------------------------------------
+
+def _flop_raus(v) -> dict:
+    return {"id": v.id, "listing_id": v.listing_id, "status": v.status,
+            "aufrufe_7t": v.aufrufe_7t, "verkaeufe_7t": v.verkaeufe_7t,
+            "grund": v.grund, "ersatz_idee_id": v.ersatz_idee_id}
+
+
+@router.get("/optimierung/vorschlaege")
+def optimierung_liste(status: str = Query("offen"), db: Session = Depends(get_db)) -> list[dict]:
+    """Angebote mit schwachen Zahlen. Aendert nichts - reine Ansicht."""
+    from app.studio import optimierung
+    from app.studio.models import MotivIdee, PodListing, StudioDesign
+
+    raus = []
+    for v in optimierung.liste(db, status=status):
+        d = _flop_raus(v)
+        listing = db.get(PodListing, v.listing_id)
+        d["produkt_titel"] = None
+        d["bild"] = None
+        if listing is not None:
+            from app.studio.models import PodProduct
+
+            produkt = db.get(PodProduct, listing.product_id)
+            if produkt is not None:
+                d["produkt_titel"] = produkt.title
+                design = db.get(StudioDesign, produkt.design_id) if produkt.design_id else None
+                d["bild"] = design.image_url if design is not None else None
+        if v.ersatz_idee_id:
+            idee = db.get(MotivIdee, v.ersatz_idee_id)
+            d["ersatz_thema"] = idee.thema if idee is not None else None
+        else:
+            d["ersatz_thema"] = None
+        raus.append(d)
+    return raus
+
+
+@router.post("/optimierung/lauf")
+async def optimierung_lauf(db: Session = Depends(get_db)) -> dict:
+    """Aktive eigene Angebote jetzt pruefen. Markiert nur - loescht nichts."""
+    from app.studio import optimierung
+
+    ebay = None
+    s = get_settings()
+    if s.ebay_client_id and s.ebay_client_secret:
+        from app.integrations.ebay import RealEbayClient
+
+        ebay = RealEbayClient(s)
+    try:
+        return await optimierung.lauf(db, s=s, ebay=ebay)
+    finally:
+        if ebay is not None and ebay._client is not None:
+            await ebay._client.aclose()
+
+
+@router.post("/optimierung/vorschlaege/{vorschlag_id}/entscheidung")
+async def optimierung_entscheidung(vorschlag_id: int, body: OptimierungEntscheidungIn,
+                                   db: Session = Depends(get_db)) -> dict:
+    """Behalten oder loeschen - IMMER ein Klick eines Menschen (Eiserne Regel 1+2).
+
+    ``ersatz_erzeugen=true`` erzeugt zusaetzlich ein neues Motiv aus der
+    verknuepften Trend-Idee und legt es als Printify-Entwurf an (kein
+    eBay-Live-Angebot - das bleibt ein eigener Schritt).
+    """
+    from app.studio import optimierung
+
+    s = get_settings()
+    ebay = None
+    if body.aktion == "loeschen" and s.ebay_client_id and s.ebay_client_secret:
+        from app.integrations.ebay import RealEbayClient
+
+        ebay = RealEbayClient(s)
+    try:
+        return await optimierung.entscheide(
+            db, vorschlag_id, aktion=body.aktion, bildordner=Path(s.studio_image_dir),
+            ersatz_erzeugen=body.ersatz_erzeugen, anbieter=body.anbieter or "openai",
+            produkttyp_key=body.produkttyp_key or "tshirt", ebay=ebay)
+    except optimierung.FlopFehler as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except kosten.BudgetErschoepft as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
+    finally:
+        if ebay is not None and ebay._client is not None:
+            await ebay._client.aclose()
+
+
+# --------------------------------------------------------------------------
+# Fortschritt eines manuellen eBay-Sammel-Laufs (z. B. "40 Motive hochladen")
+#
+# Bewusst schlicht: eine JSON-Datei mit den betroffenen Ideen-IDs, der Rest
+# kommt aus der Datenbank. Kein eigener Hintergrund-Job - der Lauf selbst
+# bleibt ein separat gestartetes Skript; diese Adresse liest nur mit.
+# --------------------------------------------------------------------------
+@router.get("/batch/fortschritt")
+def batch_fortschritt(db: Session = Depends(get_db)) -> dict:
+    import json
+    from datetime import datetime
+
+    from app.studio.models import MotivIdee, PodListing, PodProduct
+
+    pfad = Path("data/batch_ebay_status.json")
+    if not pfad.is_file():
+        return {"laeuft": False}
+    status = json.loads(pfad.read_text(encoding="utf-8"))
+    ids = status.get("ids", [])
+    ideen = db.query(MotivIdee).filter(MotivIdee.id.in_(ids)).all() if ids else []
+    # "uebernommen" heisst nur "Motiv erzeugt", nicht "bei eBay eingestellt" - ein
+    # eigener eBay-Fehler (Fund 17.11.2026, eBay-interner 500er) liess ein Motiv
+    # sonst faelschlich als fertig zaehlen, obwohl keine Angebotsnummer entstand.
+    design_ids = [i.design_id for i in ideen if i.design_id]
+    gelistete_design_ids = set()
+    if design_ids:
+        produkte = db.query(PodProduct).filter(PodProduct.design_id.in_(design_ids)).all()
+        produkt_ids = [p.id for p in produkte]
+        design_je_produkt = {p.id: p.design_id for p in produkte}
+        if produkt_ids:
+            aktive = db.query(PodListing.product_id).filter(
+                PodListing.product_id.in_(produkt_ids), PodListing.status == "active").all()
+            gelistete_design_ids = {design_je_produkt[pid] for (pid,) in aktive}
+    fertig = [i for i in ideen if i.design_id in gelistete_design_ids]
+
+    gestartet = status.get("gestartet")
+    restzeit_min = None
+    if gestartet:
+        try:
+            start = datetime.fromisoformat(gestartet)
+            vergangen_min = (datetime.now() - start).total_seconds() / 60
+            if fertig:
+                je_stueck = vergangen_min / len(fertig)
+                restzeit_min = round(je_stueck * (len(ids) - len(fertig)), 1)
+        except ValueError:
+            pass
+
+    kosten_stk = status.get("kosten_je_stueck_usd") or 0
+    # "beendet": der ausl√∂sende Lauf hat sich selbst beendet (z. B. weil eBay ein
+    # Konto-Limit meldet, das nicht durch Warten verschwindet). Ohne dieses Feld
+    # zeigte der Balken ewig "l√§uft", obwohl kein Prozess mehr etwas nachholt.
+    beendet = bool(status.get("beendet"))
+    offen = [i for i in ideen if i.design_id not in gelistete_design_ids]
+    return {
+        "laeuft": len(fertig) < len(ids) and not beendet,
+        "angehalten": beendet and len(fertig) < len(ids),
+        "gesamt": len(ids), "fertig": len(fertig),
+        "restzeit_minuten": None if beendet else restzeit_min,
+        "kosten_je_stueck_usd": kosten_stk,
+        "kosten_bisher_usd": round(len(fertig) * kosten_stk, 2),
+        "kosten_gesamt_usd": round(len(ids) * kosten_stk, 2),
+        "zuletzt_fertig": [i.thema for i in fertig[-3:]],
+        "anhalte_grund": status.get("anhalte_grund") if beendet else None,
+        "offen_themen": [i.thema for i in offen] if beendet else [],
+    }

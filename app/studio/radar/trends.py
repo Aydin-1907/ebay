@@ -60,6 +60,7 @@ KATEGORIEN = {
     "sonntag": "Deutsche Sonntagssprueche",
     "stadtliebe": "Stadtliebe",
     "funshirt": "Fun-Shirt-Sprueche",
+    "videospiele": "Videospiele (Trend)",
 }
 
 
@@ -139,17 +140,29 @@ mit hoechstens vier Woertern ueber Ruhe, Kaffee, Ausschlafen, Familie oder gemue
 Sonntag. Der Spruch ist der Fokus und muss grammatisch korrekt sein; hoechstens ein kleines
 realistisch gezeichnetes Symbol. Keine Zitate, Songtexte, Kalenderfloskeln oder Dialekte,
 deren Schreibweise nicht sicher belegt ist.""",
+        "videospiele": """VIDEOSPIELE: Recherchiere aktuell virale und meistgespielte Spiele,
+Releases und Gaming-Trends (auch Esports-Events und Streamer-Kultur). Spiel-, Studio-,
+Charakter- und Markennamen dienen NUR intern als Nachfragesignal: In der Ausgabe niemals
+Spieltitel, Logos, Charaktere, Markennamen, Soundtrack-Zitate, UI-Elemente (z. B. Lebensbalken,
+Minimap) oder einen erkennbaren fremden Grafikstil nennen oder nachahmen. Entwickle
+eigenstaendige, minimalistische Motive zu Gaming-KULTUR statt zu einem konkreten Titel:
+Genres (Roguelike, Souls-like, Battle Royale, Sandbox), Mechaniken (Respawn, Loot, Grinding,
+Speedrun, Permadeath), Ritualen (Nachtschicht-Zocken, Rage-Quit, Clutch-Moment, Ladebildschirm-
+Geduld) und Insider-Humor, der Gamer uebergreifend teilen. Ein Hauptelement, klare Silhouette,
+kein Controller- oder Konsolen-Logo irgendeiner Marke.""",
     }
     if kategorie == "mix":
-        verteilung = ("Bei sechs Empfehlungen liefere genau je eine aus Fußball, Zeichen, "
-                       "Anime, Gothic, Astronomie und Sonntag; bei anderer Anzahl verteile "
-                       "moeglichst gleichmaessig und rotiere die ausgelassenen Kategorien.")
+        verteilung = ("Bei sieben Empfehlungen liefere genau je eine aus Fußball, Zeichen, "
+                       "Anime, Gothic, Astronomie, Sonntag und Videospiele; bei anderer Anzahl "
+                       "verteile moeglichst gleichmaessig und rotiere die ausgelassenen Kategorien.")
         return verteilung + "\n\n" + "\n\n".join(
             v for k, v in auftraege.items() if k != "stadtliebe")
     return auftraege[kategorie]
 
 
-def anweisung(anzahl: int, heute: date, kategorie: str = "mix") -> str:
+def anweisung(anzahl: int, heute: date, kategorie: str = "mix", *,
+             marktkontext: str = "") -> str:
+    zusatz = f"\n\n{marktkontext.strip()}" if marktkontext.strip() else ""
     return f"""Heute ist der {heute:%d.%m.%Y}. Du recherchierst fuer einen deutschen Shop, der
 eigene Motive auf T-Shirts, Hoodies, Poloshirts und Tassen druckt und bei eBay verkauft.
 
@@ -200,7 +213,7 @@ Sortiere die finale Auswahl nach begruendeter Verkaufschance. Platz 1 muss der i
 staerkste, nicht einfach der lauteste oder aktuellste Vorschlag sein. Schreibe knapp:
 Motiv 18-45 Woerter, Begruendung hoechstens 22 Woerter, alle anderen Textfelder hoechstens
 18 Woerter. Jede Ausgabe traegt als kategorie exakt eine dieser IDs:
-fussball, zeichen, anime, gothic, astronomie, sonntag."""
+fussball, zeichen, anime, gothic, astronomie, sonntag, videospiele.{zusatz}"""
 
 
 def antwort_format(anzahl: int) -> dict:
@@ -220,7 +233,7 @@ def antwort_format(anzahl: int) -> dict:
                         "type": "object", "additionalProperties": False,
                         "properties": {
                             "thema": {**text, "description": "Praegnanter eigener Konzeptname, 2-5 Woerter"},
-                            "kategorie": {**text, "enum": ["fussball", "zeichen", "anime", "gothic", "astronomie", "sonntag"]},
+                            "kategorie": {**text, "enum": ["fussball", "zeichen", "anime", "gothic", "astronomie", "sonntag", "videospiele"]},
                             "warum": {**text, "description": "Konkretes Nachfragesignal mit Anlass oder Beleg, keine Floskel"},
                             "zeitraum": {**text, "description": "Sinnvolles Verkaufsfenster oder immergruen"},
                             "zielgruppe": {**text, "description": "Spezifische Personengruppe, niemals nur Erwachsene"},
@@ -438,7 +451,7 @@ def prompt_aus(t: Trend) -> str:
 
 
 async def recherchiere(*, api_key: str, modell: str, anzahl: int, heute: date,
-                       kategorie: str = "mix",
+                       kategorie: str = "mix", marktkontext: str = "",
                        client: Any = None) -> tuple[list[Trend], list[str]]:
     """Websuche ausfuehren. Gibt Vorschlaege und die zitierten Quellen zurueck."""
     eigener = client is None
@@ -455,7 +468,7 @@ async def recherchiere(*, api_key: str, modell: str, anzahl: int, heute: date,
             model=modell,
             tools=[{"type": "web_search", "search_context_size": "high",
                     "user_location": {"type": "approximate", "country": "DE"}}],
-            input=anweisung(anzahl, heute, kategorie),
+            input=anweisung(anzahl, heute, kategorie, marktkontext=marktkontext),
             text={"format": antwort_format(anzahl)},
             include=["web_search_call.action.sources"],
             store=False,
@@ -515,7 +528,8 @@ def _schutzfilter_check(text: str) -> Any:
 
 def speichere(db, trends: list[Trend], *, belege: list[str], angebote: dict[str, int | None],
               filter_check: Callable[[str], Any], heute: date,
-              erwartete_kategorie: str = "mix") -> dict:
+              erwartete_kategorie: str = "mix",
+              google_trends: dict[str, float | None] | None = None) -> dict:
     neu = aufgefrischt = 0
     abgelehnt: list[dict] = []
     for rang, t in enumerate(trends, start=1):
@@ -557,8 +571,14 @@ def speichere(db, trends: list[Trend], *, belege: list[str], angebote: dict[str,
             "quellen": t.quellen or belege[:3], "ebay_suchbegriff": begriff,
             "ebay_angebote": angebote.get(fid), "stand": heute.isoformat(),
         }, ensure_ascii=False)
-        idee.signal = None                       # kein erfundenes Suchvolumen
-        idee.signal_grund = (t.warum + (f" · {t.zeitraum}" if t.zeitraum else ""))[:255]
+        google_wert = (google_trends or {}).get(fid)
+        idee.signal = google_wert                 # None, wenn kein echter Wert da ist
+        grundteile = [t.warum]
+        if t.zeitraum:
+            grundteile.append(t.zeitraum)
+        if google_wert is not None:
+            grundteile.append(f"Google Trends {google_wert:g}/100 (DE, 3 Mon.)")
+        idee.signal_grund = " · ".join(grundteile)[:255]
         idee.platz = rang
         idee.quelle_url = (t.quellen or belege or [None])[0]
         # Die Entscheidung des Menschen bleibt stehen; nur offene Ideen bekommen
@@ -571,11 +591,13 @@ def speichere(db, trends: list[Trend], *, belege: list[str], angebote: dict[str,
 
 
 async def lauf(db, *, s: Any, anzahl: int | None = None, client: Any = None,
-               kategorie: str = "mix",
+               kategorie: str = "mix", marktkontext: str = "",
                zaehle_angebote: Callable[[str], Awaitable[int | None]] | None = None,
+               google_trends_signal: Callable[[list[str]], Awaitable[float | None]] | None = None,
+               kritiker_client: Any = None,
                filter_check: Callable[[str], Any] | None = None,
                heute: date | None = None, kostenbremse: bool = True) -> dict:
-    """Ein Trend-Lauf: suchen, pruefen, Marktsignal holen, ablegen. Erzeugt kein Bild."""
+    """Ein Trend-Lauf: suchen, kritisch pruefen, Marktsignal holen, ablegen. Erzeugt kein Bild."""
     from app.studio import kosten
 
     heute = heute or date.today()
@@ -585,10 +607,23 @@ async def lauf(db, *, s: Any, anzahl: int | None = None, client: Any = None,
     if kostenbremse:
         kosten.pruefe(db, KOSTEN_JE_LAUF_USD)
     trends, belege = await recherchiere(api_key=s.openai_api_key, modell=s.trend_modell,
-                                        anzahl=anzahl, heute=heute,
-                                        kategorie=kategorie, client=client)
+                                        anzahl=anzahl, heute=heute, kategorie=kategorie,
+                                        marktkontext=marktkontext, client=client)
     if kostenbremse:
         kosten.verbuche(db, provider="openai-websuche", kosten_usd=KOSTEN_JE_LAUF_USD)
+
+    kritiker_abgelehnt: list[dict] = []
+    if s.trend_kritiker_aktiv and trends:
+        from app.studio.radar import kritiker
+
+        kritik_kosten = kritiker.KOSTEN_JE_URTEIL_USD * len(trends)
+        if kostenbremse:
+            kosten.pruefe(db, kritik_kosten)
+        trends, kritiker_abgelehnt = await kritiker.filtere(
+            trends, api_key=s.openai_api_key, modell=s.trend_kritiker_modell,
+            client=kritiker_client)
+        if kostenbremse:
+            kosten.verbuche(db, provider="openai-kritiker", kosten_usd=kritik_kosten)
 
     ebay = None
     if zaehle_angebote is None and s.ebay_client_id and s.ebay_client_secret:
@@ -608,9 +643,21 @@ async def lauf(db, *, s: Any, anzahl: int | None = None, client: Any = None,
         if ebay is not None and ebay._client is not None:
             await ebay._client.aclose()
 
+    if google_trends_signal is None and s.trend_google_trends_aktiv:
+        from app.studio.radar import google_trends as google_trends_modul
+
+        google_trends_signal = google_trends_modul.interesse
+    google_signale: dict[str, float | None] = {}
+    if google_trends_signal is not None:
+        for t in trends:
+            google_signale[schluessel(f"{t.kategorie}-{t.thema}")] = await google_trends_signal(
+                t.suchbegriffe or [t.thema])
+
     bericht = speichere(db, trends, belege=belege, angebote=angebote,
                         filter_check=filter_check or _schutzfilter_check, heute=heute,
-                        erwartete_kategorie=kategorie)
+                        erwartete_kategorie=kategorie, google_trends=google_signale)
+    bericht["abgelehnt"] = kritiker_abgelehnt + bericht["abgelehnt"]
+    bericht["vorschlaege"] += len(kritiker_abgelehnt)
     bericht["kosten_usd"] = KOSTEN_JE_LAUF_USD if kostenbremse else 0.0
     logger.info("trend-radar fertig", extra={k: bericht[k] for k in ("neu", "aufgefrischt")})
     return bericht

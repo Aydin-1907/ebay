@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 from io import BytesIO
 
+import numpy as np
 from PIL import Image
 
 from app.studio.generation.base import SUPPORTED_SIZES, GeneratedImage, ImageRequest
@@ -27,6 +28,42 @@ _SIZE_ARG = {
     "portrait": "1024x1536",
     "landscape": "1536x1024",
 }
+
+# Fund 17.11.2026: "gpt-image-2" lehnt background="transparent" mit einer
+# klaren 400-Antwort ab ("Transparent background is not supported for this
+# model") - das alte "gpt-image-1" gibt es bei OpenAI nicht mehr. Statt
+# Transparenz direkt zu verlangen, wird undurchsichtig auf einem reinen
+# Chroma-Magenta erzeugt und die Farbe danach selbst herausgerechnet. Magenta,
+# weil es in keiner im Studio verwendeten Motivfarbe vorkommt - anders als
+# Gruen (Olivgruen u.a. ist eine gaengige Motivfarbe).
+_CHROMA = (255, 0, 255)
+_CHROMA_TEXT = (
+    "Der Hintergrund ist eine einzige, vollkommen gleichmaessige Flaeche in "
+    "reinem Chroma-Magenta (#FF00FF), randscharf zum Motiv, ohne Schatten, "
+    "Verlauf oder Textur. Das Motiv selbst verwendet nirgends Magenta oder "
+    "einen aehnlichen Pink-/Violettton."
+)
+#: Farbabstand (euklidisch im RGB-Raum, max. ca. 441). Innerhalb von KERN gilt
+#: ein Pixel als sicher Chroma (alpha 0); zwischen KERN und SAUM nimmt die
+#: Deckkraft weich zu - das entfernt auch den duennen magentafarbenen Rand-
+#: Fringe um Textkanten, den ein reiner Flutfuellungs-Ansatz uebersah (Fund
+#: 17.11.2026, echte Erzeugung: Eckfarbe lag bei (224, 12, 202), Abstand ~63,
+#: Fringe um die Buchstaben naeher an Weiss, aber klar magentastichig).
+#: Global statt nur vom Bildrand aus - unbedenklich, weil keine Motivfarbe im
+#: Studio in Pink/Magenta liegt.
+_CHROMA_KERN = 90
+_CHROMA_SAUM = 170
+
+
+def _chroma_entfernen(img: Image.Image) -> Image.Image:
+    """Macht den magentafarbenen Erzeugungs-Hintergrund (und seinen Kantenrand-
+    Fringe) transparent, ueberall im Bild - nicht nur am Rand verbunden."""
+    rgba = np.array(img.convert("RGBA")).astype(np.float32)
+    diff = rgba[..., :3] - np.array(_CHROMA, dtype=np.float32)
+    abstand = np.sqrt((diff ** 2).sum(axis=-1))
+    deckkraft = np.clip((abstand - _CHROMA_KERN) / (_CHROMA_SAUM - _CHROMA_KERN), 0.0, 1.0) * 255
+    rgba[..., 3] = np.minimum(rgba[..., 3], deckkraft)
+    return Image.fromarray(rgba.astype(np.uint8), "RGBA")
 
 # Listenpreise je Bild (Stand 08/2026, grosszuegig aufgerundet). Lieber etwas zu
 # hoch ansetzen: die Kostenbremse soll frueher greifen, nicht spaeter.
@@ -56,15 +93,18 @@ class OpenAIProvider:
             raise RuntimeError("openai-SDK nicht installiert (pip install openai).") from exc
 
         orientation = request.orientation()
+        prompt = f"{request.prompt}\n\n{_CHROMA_TEXT}" if request.transparent else request.prompt
         # Keine automatischen Wiederholungen einer eventuell schon bezahlten Erzeugung.
         client = OpenAI(api_key=self._api_key, timeout=180.0, max_retries=0)
         try:
             result = client.images.generate(
                 model=self.model,
-                prompt=request.prompt,
+                prompt=prompt,
                 size=_SIZE_ARG[orientation],
                 quality=self._quality,
-                background="transparent" if request.transparent else "opaque",
+                # "transparent" lehnt gpt-image-2 ab (s. Kommentar oben) - immer opak
+                # erzeugen und bei Bedarf per Chroma-Key selbst freistellen.
+                background="opaque",
                 output_format="png",
                 n=1,
             )
@@ -95,6 +135,8 @@ class OpenAIProvider:
         img = Image.open(BytesIO(base64.b64decode(payload))).convert("RGBA")
         if img.size != SUPPORTED_SIZES[orientation]:
             img = img.resize(SUPPORTED_SIZES[orientation])
+        if request.transparent:
+            img = _chroma_entfernen(img)
 
         return GeneratedImage(
             image=img,

@@ -15,14 +15,13 @@ from app.studio.radar.quellen import Quelle, erkenne
 logger = logging.getLogger("app.studio.radar")
 
 
-async def lauf(db, link: str, *, limit: int = 40,
-               nur_verkauft: bool = False) -> dict:
-    """Einen fremden Shop lesen und die Funde ablegen.
+async def lauf_mit_quelle(db, quelle: Quelle, *, limit: int = 40,
+                          nur_verkauft: bool = False) -> dict:
+    """Dieselben drei Stufen wie ``lauf()``, nur mit einer bereits gebauten Quelle.
 
-    Nur lesen und ablegen - kein Bild, keine Kosten. Was daraus wird,
-    entscheidet der Mensch in Stufe 4 (Propose-only, Eiserne Regel 1).
+    Trennung noetig fuer ``marktanalyse.py``: dort entsteht die Quelle aus einem
+    Suchbegriff (viele Verkaeufer), nicht aus einem erkannten Shop-Link.
     """
-    quelle: Quelle = erkenne(link)
     funde = await ernte_stufe.ernte(quelle, limit=limit, nur_verkauft=nur_verkauft)
     bericht = ideen_ablage.speichere(db, quelle, funde)
     bericht.update({
@@ -34,3 +33,14 @@ async def lauf(db, link: str, *, limit: int = 40,
     })
     logger.info("radar-lauf fertig", extra=bericht)
     return bericht
+
+
+async def lauf(db, link: str, *, limit: int = 40,
+               nur_verkauft: bool = False) -> dict:
+    """Einen fremden Shop lesen und die Funde ablegen.
+
+    Nur lesen und ablegen - kein Bild, keine Kosten. Was daraus wird,
+    entscheidet der Mensch in Stufe 4 (Propose-only, Eiserne Regel 1).
+    """
+    quelle: Quelle = erkenne(link)
+    return await lauf_mit_quelle(db, quelle, limit=limit, nur_verkauft=nur_verkauft)

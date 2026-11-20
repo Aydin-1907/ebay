@@ -52,6 +52,17 @@
 
     <div id="hinweis" class="hinweis" hidden></div>
 
+    <div id="batch-balken" class="panel" style="padding:14px 16px;margin-bottom:16px" hidden>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <span id="batch-titel" class="muted" style="font-size:13px">eBay-Sammel-Lauf: Motive werden eingestellt</span>
+        <span id="batch-zahl" style="font-size:13px;font-weight:600">0 / 0</span>
+      </div>
+      <div style="height:8px;border-radius:5px;background:var(--line-soft);overflow:hidden">
+        <div id="batch-fuellung" style="height:100%;width:0%;background:var(--ok);border-radius:5px;transition:width .4s"></div>
+      </div>
+      <div id="batch-details" class="muted" style="font-size:12px;margin-top:6px"></div>
+    </div>
+
     <div class="grid-kpi">
       <div class="kpi"><div class="label">Motive</div><div class="value" id="k-motive">–</div></div>
       <div class="kpi"><div class="label">Heute verbraucht</div><div class="value" id="k-verbraucht">–</div></div>
@@ -65,6 +76,7 @@
       <button type="button" data-reiter="empfehlungen">Empfehlungen</button>
       <button type="button" data-reiter="preise">Preise</button>
       <button type="button" data-reiter="radar">Radar</button>
+      <button type="button" data-reiter="optimierung">Optimierung</button>
       <button type="button" data-reiter="vorlagen">Vorlagen</button>
     </div>
 
@@ -286,6 +298,32 @@
         eine leere Liste zu liefern.</p>
       <div class="wahl" id="r-filter" style="margin:12px 0"></div>
       <div id="r-liste"><p class="muted">Noch nichts gelesen.</p></div>
+
+      <h3 style="margin-top:28px">Marktanalyse</h3>
+      <p class="muted">Durchsucht eBay über <b>viele Verkäufer</b> hinweg nach tatsächlich
+        verkauften Treffern zu deinen Suchbegriffen und legt daraus eigene,
+        unterscheidbare Empfehlungen bei den <b>Empfehlungen</b> (Trend-Radar) ab —
+        nie den fremden Wortlaut. Braucht dasselbe angemeldete Browser-Profil wie
+        „Nur verkaufte Artikel“ oben.</p>
+      <div class="zeile">
+        <div class="feld" style="flex:2 1 340px">
+          <label>Suchbegriffe (Komma-getrennt, bis zu 5)</label>
+          <input id="m-begriffe" placeholder="Fußball T-Shirt, Angeln Shirt">
+        </div>
+        <button class="btn" id="b-markt">Markt analysieren (Kategorie: oben bei „Empfehlungen“)</button>
+      </div>
+      <div id="m-ergebnis" style="margin-top:12px"></div>
+    </div>
+
+    <div class="panel" data-reiter="optimierung">
+      <h3>Optimierung</h3>
+      <p class="muted">Eigene Angebote mit schwachen Zahlen (frühestens nach 7 Tagen online,
+        echte eBay-Aufrufe + eigene Verkäufe). Nichts wird von selbst gelöscht — nur
+        gemeldet, mit Vorschlag für ein Ersatzmotiv aus dem Trend-Radar.</p>
+      <div class="zeile">
+        <button class="btn sm" id="b-opt-lauf">Jetzt prüfen</button>
+      </div>
+      <div id="opt-liste" style="margin-top:12px"><p class="muted">Noch nicht geprüft.</p></div>
     </div>
 
     <div class="panel" data-reiter="motive">
@@ -330,7 +368,7 @@ async function hole(pfad, optionen) {
   return r.json();
 }
 
-const REITER = ['motive', 'angebote', 'empfehlungen', 'preise', 'radar', 'vorlagen'];
+const REITER = ['motive', 'angebote', 'empfehlungen', 'preise', 'radar', 'optimierung', 'vorlagen'];
 function zeigeReiter(name) {
   if (!REITER.includes(name)) name = 'motive';
   document.querySelectorAll('[data-reiter].panel').forEach((p) => {
@@ -1459,7 +1497,7 @@ function radarZeile(idee) {
 const trendKategorien = {
   mix: 'Mix', fussball: 'Fußball', sport: 'Sport (alt)', zeichen: 'Japanisch / Chinesisch', anime: 'Anime',
   gothic: 'Gothic', astronomie: 'Astronomie', sonntag: 'Sonntagsspruch', stadtliebe: 'Stadtliebe',
-  funshirt: 'Fun-Shirt-Spruch',
+  funshirt: 'Fun-Shirt-Spruch', videospiele: 'Videospiele (Trend)',
 };
 
 function trendZeile(label, text) {
@@ -1804,6 +1842,140 @@ $('b-radar').onclick = async () => {
   }
 };
 
+/* --------------------------------------------------------------------------
+   Optimierung: eigene Angebote mit schwachen Zahlen
+
+   Nichts hier loescht von selbst (Eiserne Regel 2). "Loeschen" und
+   "Loeschen + Ersatz erzeugen" sind der eine menschliche Klick, den die
+   Server-Seite verlangt.
+   -------------------------------------------------------------------------- */
+function optZeile(v) {
+  const karte = el('div', 'panel');
+  karte.style.cssText = 'padding:12px;margin-bottom:10px';
+
+  const kopf = el('div');
+  kopf.style.cssText = 'display:flex;gap:12px;align-items:baseline;flex-wrap:wrap';
+  kopf.append(el('b', null, v.produkt_titel || `Angebot #${v.listing_id}`));
+  kopf.append(el('span', 'muted',
+    `${v.aufrufe_7t == null ? '?' : v.aufrufe_7t} Aufrufe/7T · ${v.verkaeufe_7t} Verkäufe/7T`));
+  karte.append(kopf);
+  karte.append(el('div', 'muted', v.grund || ''));
+
+  if (v.ersatz_thema) {
+    karte.append(el('div', 'muted', `Ersatzvorschlag aus dem Trend-Radar: ${v.ersatz_thema}`));
+  }
+
+  const knoepfe = el('div', 'wahl');
+  knoepfe.style.marginTop = '10px';
+  const eintraege = [['Behalten', 'behalten', false], ['Löschen', 'loeschen', false]];
+  if (v.ersatz_thema) eintraege.push(['Löschen + Ersatz erzeugen', 'loeschen', true]);
+  for (const [text, aktion, ersatz] of eintraege) {
+    const b = el('button', null, text);
+    b.type = 'button';
+    b.dataset.opt = aktion;
+    b.dataset.id = String(v.id);
+    b.dataset.ersatz = ersatz ? '1' : '0';
+    knoepfe.append(b);
+  }
+  karte.append(knoepfe);
+  return karte;
+}
+
+async function ladeOptimierung() {
+  const ziel = $('opt-liste');
+  const daten = await hole('/api/v1/studio/optimierung/vorschlaege?status=offen');
+  ziel.textContent = '';
+  if (!daten.length) {
+    ziel.append(el('p', 'muted', 'Keine offenen Hinweise.'));
+    return;
+  }
+  for (const v of daten) ziel.append(optZeile(v));
+}
+
+document.addEventListener('click', async (ev) => {
+  const knopf = ev.target.closest('[data-opt]');
+  if (!knopf) return;
+  const ersatz = knopf.dataset.ersatz === '1';
+  if (knopf.dataset.opt === 'loeschen' &&
+      !confirm(ersatz
+        ? 'Angebot bei eBay beenden und Ersatzmotiv erzeugen & als Entwurf anlegen?'
+        : 'Angebot wirklich bei eBay beenden?')) {
+    return;
+  }
+  knopf.disabled = true;
+  try {
+    const e = await hole(`/api/v1/studio/optimierung/vorschlaege/${knopf.dataset.id}/entscheidung`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aktion: knopf.dataset.opt, ersatz_erzeugen: ersatz }),
+    });
+    if (e.ersatz) {
+      melde(`Angebot beendet · Ersatzmotiv erzeugt (${usd(e.ersatz.kosten_usd)}) ` +
+            `· Printify-Entwurf „${e.ersatz.titel}“ angelegt — noch nicht veröffentlicht.`);
+    } else {
+      melde(knopf.dataset.opt === 'behalten' ? 'Angebot bleibt unverändert.' : 'Angebot beendet.');
+    }
+    await ladeOptimierung();
+  } catch (err) {
+    zeigeFehler(err);
+  } finally {
+    knopf.disabled = false;
+  }
+});
+
+$('b-opt-lauf').onclick = async () => {
+  const knopf = $('b-opt-lauf');
+  knopf.disabled = true;
+  knopf.textContent = 'Prüfe …';
+  try {
+    const b = await hole('/api/v1/studio/optimierung/lauf', { method: 'POST' });
+    melde(`${b.geprueft} Angebote geprüft · ${b.flops} mit schwachen Zahlen`);
+    await ladeOptimierung();
+  } catch (err) {
+    zeigeFehler(err);
+  } finally {
+    knopf.disabled = false;
+    knopf.textContent = 'Jetzt prüfen';
+  }
+};
+
+/* --------------------------------------------------------------------------
+   Marktanalyse: echte Verkaufszahlen vieler Haendler -> eigene Empfehlungen
+   -------------------------------------------------------------------------- */
+$('b-markt').onclick = async () => {
+  const knopf = $('b-markt');
+  const begriffe = $('m-begriffe').value.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 5);
+  if (!begriffe.length) { melde('Bitte mindestens einen Suchbegriff eintragen.', true); return; }
+  knopf.disabled = true;
+  knopf.textContent = 'Analysiere … (dauert, braucht Anmeldung)';
+  const ziel = $('m-ergebnis');
+  ziel.textContent = '';
+  try {
+    const b = await hole('/api/v1/studio/radar/marktanalyse', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ suchbegriffe: begriffe, kategorie: $('t-kategorie').value }),
+    });
+    const kopf = el('p', null,
+      `${b.neu} neue Empfehlung(en), ${b.aufgefrischt} aufgefrischt — stehen jetzt bei „Empfehlungen“.`);
+    ziel.append(kopf);
+    for (const beob of b.marktanalyse.beobachtungen) {
+      const box = el('div', 'muted');
+      box.style.cssText = 'font-size:12px;margin-top:6px';
+      const treffer = beob.treffer.map((t) => `"${t.titel}" (${t.verkauft}+ verkauft)`).join(', ');
+      box.textContent = `„${beob.suchbegriff}“: ` + (treffer || 'keine verkauften Treffer gefunden');
+      ziel.append(box);
+    }
+    for (const f of b.marktanalyse.fehler) {
+      ziel.append(el('p', 'muted', `„${f.suchbegriff}“: ${f.grund}`));
+    }
+    await ladeTrends();
+  } catch (err) {
+    zeigeFehler(err);
+  } finally {
+    knopf.disabled = false;
+    knopf.textContent = 'Markt analysieren';
+  }
+};
+
 async function ladePreise() {
   const daten = await hole('/api/v1/studio/preise');
   const eur = (n) => n.toFixed(2).replace('.', ',');
@@ -1969,8 +2141,48 @@ $('angebote').addEventListener('click', async (ev) => {
     knoepfe.forEach((k) => { k.disabled = false; delete k.dataset.bereit; });
   }
 });
-Promise.all([ladeStand(), ladeMotive(), ladeRadar(), ladePreise(), ladeAngebote()])
+Promise.all([ladeStand(), ladeMotive(), ladeRadar(), ladePreise(), ladeAngebote(), ladeOptimierung()])
   .catch(() => { /* Hinweis steht schon */ });
+
+/* --------------------------------------------------------------------------
+   Fortschrittsbalken eines manuellen eBay-Sammel-Laufs (z. B. "40 Motive
+   hochladen"). Fragt alle paar Sekunden den Stand ab; verschwindet, sobald
+   alle Motive durch sind.
+   -------------------------------------------------------------------------- */
+let _batchTimer = null;
+
+async function ladeBatchFortschritt() {
+  let b;
+  try {
+    b = await hole('/api/v1/studio/batch/fortschritt');
+  } catch {
+    return;
+  }
+  const box = $('batch-balken');
+  if (!b.gesamt) { box.hidden = true; return; }
+  box.hidden = false;
+  $('batch-zahl').textContent = `${b.fertig} / ${b.gesamt}`;
+  $('batch-fuellung').style.width = `${Math.round((b.fertig / b.gesamt) * 100)}%`;
+  $('batch-fuellung').style.background = b.angehalten ? 'var(--warn)' : 'var(--ok)';
+  const kosten = `${b.kosten_bisher_usd.toFixed(2)} $ von ca. ${b.kosten_gesamt_usd.toFixed(2)} $ (Bilderzeugung, eBay-Einstellen 0 €)`;
+  if (b.angehalten) {
+    $('batch-titel').textContent = 'eBay-Sammel-Lauf: angehalten, nicht abgeschlossen';
+    $('batch-details').textContent = `${b.anhalte_grund || 'Lauf wurde angehalten.'} · ${kosten}`
+      + (b.offen_themen && b.offen_themen.length ? ` · offen: ${b.offen_themen.join(', ')}` : '');
+  } else {
+    $('batch-titel').textContent = 'eBay-Sammel-Lauf: Motive werden eingestellt';
+    const rest = b.restzeit_minuten == null ? '…'
+      : b.restzeit_minuten < 1 ? 'unter 1 Minute'
+      : b.restzeit_minuten < 60 ? `${Math.round(b.restzeit_minuten)} Min.`
+      : `${(b.restzeit_minuten / 60).toFixed(1).replace('.', ',')} Std.`;
+    $('batch-details').textContent = b.laeuft
+      ? `Restzeit ca. ${rest} · ${kosten}${b.zuletzt_fertig.length ? ' · zuletzt: ' + b.zuletzt_fertig.join(', ') : ''}`
+      : `Fertig · ${kosten}`;
+  }
+  if (!b.laeuft && _batchTimer) { clearInterval(_batchTimer); _batchTimer = null; }
+}
+ladeBatchFortschritt();
+_batchTimer = setInterval(ladeBatchFortschritt, 5000);
 </script>
 </body>
 </html>

@@ -147,6 +147,31 @@ async def _trend_radar_job() -> None:
         db.close()
 
 
+async def _optimierung_flop_job() -> None:
+    """Taeglich: eigene POD-Angebote mit schwachen Zahlen markieren. Loescht nichts."""
+    from app.config import get_settings as _s
+    s = _s()
+    if not (s.studio_enabled and s.optimierung_flop_pruefung_taeglich):
+        return
+    db = SessionLocal()
+    ebay = None
+    try:
+        if s.ebay_client_id and s.ebay_client_secret:
+            from app.integrations.ebay import RealEbayClient
+
+            ebay = RealEbayClient(s)
+        from app.studio import optimierung
+
+        bericht = await optimierung.lauf(db, s=s, ebay=ebay)
+        logger.info("scheduler: flop-radar", extra=bericht)
+    except Exception as exc:  # noqa: BLE001 - ein Job darf die Loop nie crashen
+        logger.error("scheduler: flop-radar failed", extra={"error": str(exc)[:200]})
+    finally:
+        if ebay is not None and ebay._client is not None:
+            await ebay._client.aclose()
+        db.close()
+
+
 async def _marktcheck_job() -> None:
     """Offene Spruch-/Trendideen nach eBay-Marktsignalen bewerten.
 
@@ -271,6 +296,8 @@ def start_scheduler() -> AsyncIOScheduler:
                   id="ebay_loeschmeldungen_stuendlich", replace_existing=True)
     sched.add_job(_trend_radar_job, CronTrigger(hour=5, minute=30),
                   id="trend_radar_taeglich", replace_existing=True)
+    sched.add_job(_optimierung_flop_job, CronTrigger(hour=6, minute=0),
+                  id="optimierung_flop_taeglich", replace_existing=True)
     sched.add_job(_marktcheck_job, CronTrigger(hour="*/6", minute=45),
                   id="studio_marktcheck_6h", replace_existing=True)
     sched.add_job(_bestellabgleich_job, CronTrigger(minute="*/15"),

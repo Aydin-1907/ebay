@@ -44,9 +44,17 @@ def fit_scale(
 
 
 def ist_weisse_variante(variante: dict[str, Any]) -> bool:
-    """Printify nennt Varianten "White / M": die Farbe steht vor dem ersten Schraegstrich."""
-    farbe = str(variante.get("title") or "").split("/")[0].strip().lower()
-    return farbe == "white"
+    """Braucht diese Variante die dunkle Schrift-Fassung?
+
+    Printify nennt Varianten "White / M": die Farbe steht vor dem ersten
+    Schraegstrich. Erweitert (14.11.2026) auf jede HELLE Farbe, nicht nur
+    "White" - sonst blieb z. B. "Natural" bei weisser, schlecht lesbarer
+    Schrift (Printify liefert hier nur den Namen, keinen Hex-Wert).
+    """
+    from app.studio.postprocess.schriftfarbe import ist_heller_farbname
+
+    farbe = str(variante.get("title") or "").split("/")[0].strip()
+    return ist_heller_farbname(farbe)
 
 
 def build_product_payload(

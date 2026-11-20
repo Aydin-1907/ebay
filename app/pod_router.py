@@ -161,7 +161,11 @@ def order_motiv(order_id: int, position: int = 0, seite: str = "vorne", ebene: i
         pfad = produktweg.bildpfad(motiv, Path(get_settings().studio_image_dir))
     except produktweg.MotivFehler as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    weiss = p.get("farbcode") == "White"
+    from app.studio import mockup_plan
+
+    farbcode = p.get("farbcode")
+    passend = next((f for f in mockup_plan.FARBEN if f.hersteller == farbcode), None)
+    weiss = bool(passend and schriftfarbe.ist_helle_farbe(passend.hex))
     if weiss:
         pfad = schriftfarbe.dunkle_fassung(pfad)
     slug = re.sub(r"[^a-z0-9]+", "-", (motiv.title or "motiv").lower().encode("ascii", "ignore").decode()).strip("-")[:40] or "motiv"

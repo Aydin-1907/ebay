@@ -140,6 +140,25 @@ class Settings(BaseSettings):
     trend_anzahl: int = 6
     # Taeglich morgens von selbst suchen (braucht BACKGROUND_JOBS_ENABLED=true).
     trend_radar_taeglich: bool = False
+    # Google Trends (app/studio/radar/google_trends.py) als echtes Zusatzsignal zu jedem
+    # Vorschlag - kostenlos, kein API-Key. Liefert nichts (bleibt None), statt etwas zu
+    # erfinden, wenn Google blockt oder nichts zurueckgibt. Default an; .env-Schalter
+    # TREND_GOOGLE_TRENDS_AKTIV=false schaltet es ab (z. B. fuer netzwerkfreie Tests).
+    trend_google_trends_aktiv: bool = True
+    # Zweite, unabhaengige Meinung je Empfehlung (app/studio/radar/kritiker.py).
+    # Nutzerwunsch (17.11.2026): immer die besten Empfehlungen, nicht die billigsten -
+    # deshalb per Default AN, trotz kleinem Zusatzaufruf je Vorschlag.
+    trend_kritiker_aktiv: bool = True
+    trend_kritiker_modell: str = "gpt-4.1-mini"
+
+    # --- Optimierung: Flop-Radar fuer eigene POD-Angebote (app/studio/optimierung.py) ---
+    # Nutzerwunsch (17.11.2026): woechentliche statt 21-taegiger Betrachtung, feste
+    # Schwellen statt Vergleich untereinander. Markiert nur - geloescht wird nie von
+    # selbst (propose-only, Eiserne Regel 1+2).
+    optimierung_mindestalter_tage: int = 7
+    optimierung_min_aufrufe: int = 15          # darunter: Flop, egal wie alt
+    optimierung_min_aufrufe_ohne_verkauf: int = 40  # darueber + 0 Verkaeufe: auch Flop
+    optimierung_flop_pruefung_taeglich: bool = True  # braucht BACKGROUND_JOBS_ENABLED=true
     ebay_marketplace_id: str = "EBAY_DE"   # EBAY_DE | EBAY_US | EBAY_GB | ...
     ebay_use_sandbox: bool = False         # True -> api.sandbox.ebay.com
     # Merchant-Location (Pflicht fuer publishOffer; WAREHOUSE, kein Ladengeschaeft noetig)

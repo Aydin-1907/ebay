@@ -64,6 +64,7 @@ def _filter(text):
 
 
 def _s(**over):
+    over.setdefault("trend_kritiker_aktiv", False)
     return Settings(_env_file=None, openai_api_key="k", trend_modell="gpt-5.5",
                     trend_anzahl=12, **over)
 
@@ -75,9 +76,14 @@ def db():
     sitzung.close()
 
 
+async def _kein_google_trend(suchbegriffe):
+    return None
+
+
 async def _lauf(db, eintraege, **over):
     async def zaehle(begriff):
         return 4321
+    over.setdefault("google_trends_signal", _kein_google_trend)
     return await trends.lauf(db, s=_s(), client=_FakeOpenAI(eintraege), zaehle_angebote=zaehle,
                              filter_check=_filter, heute=HEUTE, kostenbremse=False, **over)
 
@@ -119,7 +125,7 @@ async def test_lauf_legt_gepruefte_vorschlaege_ohne_bild_ab(db):
 async def test_websuche_wird_mit_deutschem_standort_aufgerufen(db):
     client = _FakeOpenAI([_eintrag("Angeln")])
     await trends.lauf(db, s=_s(), client=client, zaehle_angebote=None, filter_check=_filter,
-                      heute=HEUTE, kostenbremse=False)
+                      heute=HEUTE, kostenbremse=False, google_trends_signal=_kein_google_trend)
     werkzeug = client.gesehen["tools"][0]
     assert werkzeug["type"] == "web_search" and werkzeug["user_location"]["country"] == "DE"
     assert client.gesehen["model"] == "gpt-5.5"
@@ -136,13 +142,21 @@ async def test_fussball_sucht_breit_aber_gibt_keine_vereinsmerkmale_aus(db):
     client = _FakeOpenAI([_eintrag("Torwartfokus", kategorie="fussball")])
     await trends.lauf(db, s=_s(), client=client, zaehle_angebote=None,
                       filter_check=_filter, heute=HEUTE, kostenbremse=False,
-                      kategorie="fussball")
+                      kategorie="fussball", google_trends_signal=_kein_google_trend)
 
     auftrag = client.gesehen["input"]
     assert "FUSSBALL" in auftrag and "keine anderen Sportarten" in auftrag
     assert "Basketball" not in auftrag
     assert "NUR intern als Nachfragesignal" in auftrag
     assert "niemals Namen, Logos, Wappen" in auftrag and "Vereinssprueche" in auftrag
+
+
+def test_videospiele_kategorie_verlangt_kultur_statt_titel():
+    auftrag = trends.anweisung(6, HEUTE, "videospiele")
+
+    assert "VIDEOSPIELE" in auftrag
+    assert "niemals" in auftrag and "Spieltitel" in auftrag
+    assert "Gaming-KULTUR" in auftrag
 
 
 def test_ideen_sind_kurz_realistisch_und_nicht_ueberladen():
@@ -190,7 +204,8 @@ async def test_quelle_wird_der_richtigen_empfehlung_zugeordnet(db):
     client = _FakeOpenAI([ohne_links], urls=("https://andere-quelle.de/allgemein",))
 
     await trends.lauf(db, s=_s(), client=client, zaehle_angebote=None,
-                      filter_check=_filter, heute=HEUTE, kostenbremse=False)
+                      filter_check=_filter, heute=HEUTE, kostenbremse=False,
+                      google_trends_signal=_kein_google_trend)
 
     gespeichert = ideen.liste(db, quelle="trend")[0]
     beschreibung = json.loads(gespeichert.beschreibung)
@@ -289,6 +304,33 @@ async def test_ohne_schluessel_keine_suche(db):
 def test_motivart_sperre_greift_auch_bei_trends():
     t = trends.aus_eintrag(_eintrag("Angeln", motiv="Logo auf einem T-Shirt mit Angel"))
     assert trends.schutzgrund(t, _filter).startswith("Motivart")
+
+
+async def test_kritiker_haelt_eine_idee_vor_dem_ablegen_zurueck(db):
+    class _Kritiker:
+        def __init__(self):
+            self.responses = SimpleNamespace(create=self._create)
+
+        async def _create(self, *, input, **kw):
+            import json as _json
+
+            bestehen = "Angeln" in input
+            return SimpleNamespace(output_text=_json.dumps(
+                {"bestehen": bestehen, "begruendung": "" if bestehen else "zu generisch"}))
+
+    client = _FakeOpenAI([_eintrag("Angeln Herbst"), _eintrag("Oktoberfest")])
+    kritiker_client = _Kritiker()
+    async def zaehle(begriff):
+        return 4321
+
+    b = await trends.lauf(db, s=_s(trend_kritiker_aktiv=True), client=client,
+                          zaehle_angebote=zaehle, filter_check=_filter, heute=HEUTE,
+                          kostenbremse=False, google_trends_signal=_kein_google_trend,
+                          kritiker_client=kritiker_client)
+
+    assert [i.thema for i in ideen.liste(db, quelle="trend")] == ["Angeln Herbst"]
+    assert {"thema": "Oktoberfest", "grund": "Kritiker: zu generisch"} in b["abgelehnt"]
+    assert b["neu"] == 1
 
 
 async def test_erst_erzeugen_macht_ein_bild(db, tmp_path):

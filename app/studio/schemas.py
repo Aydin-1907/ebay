@@ -38,6 +38,23 @@ class DesignStatusIn(BaseModel):
     status: str = Field(pattern="^(draft|ready|archived)$")
 
 
+class MarktanalyseIn(BaseModel):
+    """Suchbegriffe, zu denen eBay nach tatsaechlich verkauften Treffern durchsucht wird."""
+
+    suchbegriffe: list[str] = Field(min_length=1, max_length=5)
+    kategorie: str = "mix"
+    anzahl: Optional[int] = Field(default=None, ge=3, le=20)
+
+
+class OptimierungEntscheidungIn(BaseModel):
+    """Die menschliche Entscheidung ueber einen Flop-Vorschlag."""
+
+    aktion: str = Field(pattern="^(behalten|loeschen)$")
+    ersatz_erzeugen: bool = False
+    anbieter: Optional[str] = Field(default=None, max_length=30)
+    produkttyp_key: Optional[str] = Field(default=None, max_length=30)
+
+
 class LinkIn(BaseModel):
     """Ein eBay-Angebot einem Motiv zuordnen.
 
@@ -208,7 +225,8 @@ class TrendLaufIn(BaseModel):
 
     anzahl: int = Field(default=12, ge=3, le=20)
     kategorie: Literal[
-        "mix", "fussball", "zeichen", "anime", "gothic", "astronomie", "sonntag", "stadtliebe", "funshirt"
+        "mix", "fussball", "zeichen", "anime", "gothic", "astronomie", "sonntag", "stadtliebe",
+        "funshirt", "videospiele",
     ] = "mix"
 
 

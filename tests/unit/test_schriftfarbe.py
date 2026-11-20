@@ -40,15 +40,39 @@ def test_dunkle_fassung_macht_weiss_schwarz_und_laesst_farben_und_transparenz(tm
     assert Image.open(quelle).getpixel((0, 0)) == (255, 255, 255, 255)   # Quelle unberuehrt
 
 
+def test_helligkeit_entscheidet_nicht_nur_der_name():
+    # Fund 14.11.2026: "Sand" (#D6C4A6) ist hell und war bisher nicht erfasst.
+    assert schriftfarbe.ist_helle_farbe("#FFFFFF")
+    assert schriftfarbe.ist_helle_farbe("#D6C4A6")      # Sand
+    assert not schriftfarbe.ist_helle_farbe("#1B1B1B")  # Schwarz
+    assert not schriftfarbe.ist_helle_farbe("#1F2A44")  # Navy
+    assert not schriftfarbe.ist_helle_farbe("keine-farbe")
+
+
+def test_heller_farbname_erkennt_mehr_als_nur_white():
+    assert schriftfarbe.ist_heller_farbname("Natural")
+    assert schriftfarbe.ist_heller_farbname("Sand")
+    assert not schriftfarbe.ist_heller_farbname("Black")
+    assert not schriftfarbe.ist_heller_farbname("Navy")
+
+
 def test_printify_weisse_variante_bekommt_die_schwarze_datei():
     typ = next(iter(PRODUCT_TYPES.values()))
     varianten = [{"id": 1, "title": "White / M"}, {"id": 2, "title": "Black / M"},
                  {"id": 3, "title": "White / L"}]
     assert ist_weisse_variante(varianten[0]) and not ist_weisse_variante(varianten[1])
+
+
+def test_printify_helle_variante_jenseits_von_white_bekommt_ebenfalls_die_schwarze_datei():
+    assert ist_weisse_variante({"id": 1, "title": "Natural / M"})
+    assert ist_weisse_variante({"id": 1, "title": "Sand / L"})
+    assert not ist_weisse_variante({"id": 1, "title": "Royal Blue / M"})
+    typ = next(iter(PRODUCT_TYPES.values()))
+    varianten = [{"id": 1, "title": "Natural / M"}, {"id": 2, "title": "Black / M"}]
     payload = build_product_payload(title="t", description="d", product_type=typ, image_id="hell",
                                     variants=varianten, price_cents=1990, image_id_dunkel="dunkel")
     je_bild = {a["placeholders"][0]["images"][0]["id"]: a["variant_ids"] for a in payload["print_areas"]}
-    assert je_bild == {"hell": [2], "dunkel": [1, 3]}
+    assert je_bild == {"hell": [2], "dunkel": [1]}
 
 
 def test_printify_ohne_dunkle_datei_bleibt_eine_druckdatei():
