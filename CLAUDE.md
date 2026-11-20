@@ -132,8 +132,8 @@ benutzt.
 - **Bildaufbau wechselt** (`Trend.aufbau`, 20.11.2026): „motiv“ (großes Motiv,
   darunter höchstens drei Wörter), „spruch“ (Text im Fokus) oder „nur_motiv“.
   Die Websuche muss abwechseln; der Prompt setzt die Gewichtung. Kostenlose
-  Kollektionen: `motiv_kollektion.py` (18 Motiv-Ideen) und
-  `gaming_hype_kollektion.py` (7 markenfreie Ideen zum Spiele-Release Nov 2026).
+  Kollektion: `motiv_kollektion.py` (18 Motiv-Ideen). Eine Videospiel-Kollektion
+  gab es kurz und wurde auf Wunsch des Betreibers wieder entfernt.
 - **Vom Motiv zum Produkt gibt es einen Weg** (`app/studio/produktweg.py`):
   Druckcheck ohne Wirkung, dann Printify-Entwurf mit Bestätigung. Der Umrechner
   sitzt zwingend dazwischen — `erstelle_produkt` prüft die Auflösung selbst
