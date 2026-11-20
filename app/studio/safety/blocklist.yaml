@@ -31,6 +31,22 @@ franchises:
   - batman
   - minecraft
   - fortnite
+  # Videospiele (Nachtrag 20.11.2026, GTA-6-Release): grosse Publisher melden
+  # Fan-Merch bei eBay ueber VeRO.
+  - gta
+  - grand theft auto
+  - rockstar games
+  - vice city
+  - call of duty
+  - zelda
+  - super mario
+  - elden ring
+  - the witcher
+  - counter strike
+  - league of legends
+  - valorant
+  - playstation
+  - xbox
 
 verbotene_inhalte:
   - hakenkreuz

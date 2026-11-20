@@ -205,6 +205,7 @@
         </div>
         <button class="btn" id="b-trends">Neue Empfehlungen ausarbeiten</button>
         <button class="btn ghost" id="b-funshirt" title="Kuratierte Fun-Shirt-Sprüche mit kleinem passendem Motiv – kostenlos, es entsteht kein Bild">Fun-Shirt-Sprüche laden (0 $)</button>
+        <button class="btn ghost" id="b-motiv" title="Großes Motiv als Blickfang, darunter nur ein kurzer Text – kostenlos, es entsteht kein Bild">Motiv-Ideen laden (0 $)</button>
         <button class="btn ghost" id="b-trends-auswahl" title="Erzeugt nur die angehakten Empfehlungen und prüft danach automatisch eBay">Ausgewählte erzeugen & eBay</button>
         <button class="btn ghost" id="b-trends-alle" title="Erzeugt alle aktuell sichtbaren offenen Empfehlungen nacheinander">Alle sichtbaren Motive erzeugen</button>
         <span class="muted">Dauert etwa 2–4 Minuten · recherchiert die gewählte Kategorie</span>
@@ -213,6 +214,14 @@
         <button class="btn ghost klein" type="button" onclick="alleGruppen(true)">Alle Kategorien aufklappen</button>
         <button class="btn ghost klein" type="button" onclick="alleGruppen(false)">Alle Kategorien zuklappen</button>
       </div>
+      <details id="hype-puls" style="margin-top:12px">
+        <summary>Hype-Puls: was Deutschland gerade sucht (kostenlos)</summary>
+        <p class="muted">Google Trends, meistgelesene Wikipedia-Artikel und die nächsten Anlässe.
+          Fließt automatisch in „Neue Empfehlungen ausarbeiten“ ein.
+          <b>Geschützt</b> heißt: Hype nutzen, aber nur das Lebensgefühl – nie Name, Logo, Cover oder Figuren.</p>
+        <button class="btn ghost klein" type="button" id="b-hype-puls">Puls laden (0 $)</button>
+        <div id="hype-liste"></div>
+      </details>
       <div id="t-liste"><p class="muted">Noch keine Empfehlungen ausgearbeitet.</p></div>
     </div>
 
@@ -1516,6 +1525,8 @@ function trendKarte(idee) {
   kopf.append(el('span', 'badge', `Empfehlung #${idee.platz ?? '?'}`),
               el('span', 'badge', trendKategorien[d.kategorie] || 'Mix'),
               el('b', null, idee.thema || ''));
+  const aufbauText = { motiv: 'Motiv groß, Text klein', spruch: 'Spruch im Fokus', nur_motiv: 'Nur Motiv' }[d.aufbau];
+  if (aufbauText) kopf.append(el('span', 'badge muted', aufbauText));
   if (d.zeitraum) kopf.append(el('span', 'muted', d.zeitraum));
   karte.append(kopf);
   if (d.motiv) karte.append(trendZeile('Idee: ', d.motiv));
@@ -1654,6 +1665,55 @@ $('b-trends').onclick = async () => {
 
 $('t-kategorie').onchange = () => ladeTrends().catch(zeigeFehler);
 
+const _hypeAmpel = {
+  frei: ['ok', 'frei'],
+  geschuetzt: ['warn', 'geschützt – nur Lebensgefühl'],
+  ungeeignet: ['bad', 'ungeeignet'],
+};
+const _hypeQuelle = { google_trends: 'Google Trends', wikipedia: 'Wikipedia', kalender: 'Anlass' };
+
+$('b-hype-puls').onclick = async () => {
+  const knopf = $('b-hype-puls');
+  const ziel = $('hype-liste');
+  knopf.disabled = true;
+  knopf.textContent = 'Puls wird gelesen …';
+  try {
+    const b = await hole('/api/v1/studio/radar/hype-puls');
+    ziel.replaceChildren();
+    for (const f of b.fehler || []) {
+      ziel.append(el('p', 'muted', `${_hypeQuelle[f.quelle] || f.quelle} gerade nicht lesbar: ${f.grund}`));
+    }
+    const tabelle = el('table');
+    for (const h of b.hypes || []) {
+      const zeile = el('tr');
+      const [klasse, text] = _hypeAmpel[h.ampel] || ['muted', h.ampel];
+      const thema = el('td');
+      if (h.url) {
+        const a = el('a', null, h.thema);
+        a.href = h.url; a.target = '_blank'; a.rel = 'noopener';
+        thema.append(a);
+      } else {
+        thema.textContent = h.thema;
+      }
+      const info = h.quelle === 'kalender'
+        ? `${h.datum} · listen bis ${h.listen_bis} · ${h.kontext}`
+        : [h.wert, h.kontext, h.grund].filter(Boolean).join(' · ');
+      const ampel = el('td');
+      ampel.append(el('span', `badge ${klasse}`, text));
+      zeile.append(el('td', 'muted', _hypeQuelle[h.quelle] || h.quelle), thema, ampel,
+                   el('td', 'muted', info));
+      tabelle.append(zeile);
+    }
+    ziel.append(tabelle);
+  } catch (err) {
+    zeigeFehler(err);
+  } finally {
+    knopf.disabled = false;
+    knopf.textContent = 'Puls neu laden (0 $)';
+  }
+};
+
+
 async function kollektionLaden(knopfId, pfad, kategorie, name) {
   const knopf = $(knopfId);
   knopf.disabled = true;
@@ -1670,6 +1730,7 @@ async function kollektionLaden(knopfId, pfad, kategorie, name) {
   }
 }
 $('b-funshirt').onclick = () => kollektionLaden('b-funshirt', 'funshirt-kollektion', 'funshirt', 'Fun-Shirt-Sprüche');
+$('b-motiv').onclick = () => kollektionLaden('b-motiv', 'motiv-kollektion', 'funshirt', 'Motiv groß, Text klein');
 
 async function radarErzeugenUndAutoEbay(knoepfe, sammler, leerText) {
   if (!knoepfe.length) {
