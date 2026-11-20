@@ -66,8 +66,7 @@
     <div class="grid-kpi">
       <div class="kpi"><div class="label">Motive</div><div class="value" id="k-motive">–</div></div>
       <div class="kpi"><div class="label">Heute verbraucht</div><div class="value" id="k-verbraucht">–</div></div>
-      <div class="kpi"><div class="label">Rest heute</div><div class="value" id="k-rest">–</div></div>
-      <div class="kpi"><div class="label">Tagesbudget</div><div class="value" id="k-budget">–</div></div>
+      <div class="kpi"><div class="label">Budget aktuell</div><div class="value" id="k-budget">–</div></div>
     </div>
 
     <div class="studio-reiter" id="studio-reiter" role="tablist">
@@ -406,9 +405,9 @@ async function ladeStand() {
   $('k-motive').textContent = s.designs ?? 0;
   $('k-verbraucht').textContent = usd(s.verbraucht_heute_usd);
   const unbegrenzt = s.tagesbudget_usd < 0;
-  $('k-rest').textContent = unbegrenzt ? 'unbegrenzt' : usd(s.rest_heute_usd);
-  $('k-budget').textContent = unbegrenzt ? 'unbegrenzt' : usd(s.tagesbudget_usd);
-  $('k-rest').closest('.kpi').hidden = unbegrenzt;
+  // "Budget aktuell" zeigt den REST (nicht die Obergrenze) - er soll sich von
+  // selbst verkleinern, sobald etwas erzeugt wird (Nutzerwunsch 20.11.2026).
+  $('k-budget').textContent = unbegrenzt ? 'unbegrenzt' : usd(s.rest_heute_usd);
   if (s.tagesbudget_usd === 0) {
     $('hinweis').hidden = false;
     $('hinweis').textContent =
