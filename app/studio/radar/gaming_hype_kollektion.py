@@ -36,14 +36,14 @@ _RISIKO = ("Kein Spieltitel, kein Logo und keine Figur in Titel oder Beschreibun
 
 def _trend(thema: str, *, warum: str, zeitraum: str, zielgruppe: str, kaufmoment: str,
            verkaufswinkel: str, motiv: str, farben: list[str], spruch: str,
-           suchbegriffe: list[str], quellen: list[str], stil: str = _STIL,
+           suchbegriffe: list[str], quellen: list[str], aufbau: str, stil: str = _STIL,
            produkt: str = _PRODUKT) -> trends.Trend:
     return trends.Trend(
         thema=thema, kategorie=KATEGORIE, warum=warum, zeitraum=zeitraum,
         zielgruppe=zielgruppe, kaufmoment=kaufmoment, verkaufswinkel=verkaufswinkel,
         motiv=motiv, stil=stil, farben=farben, spruch=spruch, produkt=produkt,
         druckhinweis=_DRUCK, risiko=_RISIKO, suchbegriffe=suchbegriffe,
-        quellen=quellen, gruppe=GRUPPE)
+        quellen=quellen, gruppe=GRUPPE, aufbau=aufbau)
 
 
 def eintraege() -> list[trends.Trend]:
@@ -64,7 +64,7 @@ def eintraege() -> list[trends.Trend]:
             farben=["Signalrot", "Anthrazit", "Creme"],
             spruch="Urlaub. Wichtige Mission.",
             suchbegriffe=["Gamer Shirt lustig", "Zocker Geschenk Mann", "Gaming T-Shirt Spruch"],
-            quellen=[_BELEG_URLAUB]),
+            quellen=[_BELEG_URLAUB], aufbau="spruch"),
         _trend(
             "Lange gewartet",
             warum=("Fans haben rund dreizehn Jahre auf diesen Release gewartet; die Wartezeit "
@@ -77,11 +77,11 @@ def eintraege() -> list[trends.Trend]:
                             "und sie altert nicht mit dem Spiel."),
             motiv=("Eine realistisch gezeichnete Sanduhr aus Messing und Glas, durch die gerade "
                    "das allerletzte Sandkorn faellt; ein feiner Lichtreflex auf dem Glas. "
-                   "Zentral unter dem Schriftzug, freigestellt, ohne Hintergrund."),
+                   "Gross und zentral als Blickfang, freigestellt, ohne Hintergrund."),
             farben=["Gold", "Schwarz", "Sandbeige"],
-            spruch="Gewartet. Hat sich gelohnt.",
+            spruch="Hat sich gelohnt.",
             suchbegriffe=["Gamer Geduld Shirt", "Zocker T-Shirt lustig", "Videospiel Geschenk"],
-            quellen=[_BELEG_URLAUB]),
+            quellen=[_BELEG_URLAUB], aufbau="motiv"),
         _trend(
             "Sunset Drive 86",
             warum=("Der Release rueckt die 80er-Neon-Aesthetik von Sonnenkueste, Palmen und "
@@ -98,7 +98,7 @@ def eintraege() -> list[trends.Trend]:
             farben=["Neonpink", "Orange", "Violett", "Tiefblau"],
             spruch="Sunset Drive 86",
             suchbegriffe=["Retro 80er Shirt", "Synthwave T-Shirt", "Neon Palmen Shirt"],
-            quellen=[],
+            quellen=[], aufbau="motiv",
             stil=("Realistische Retro-Siebdruck-Illustration im Editorial-Stil der Achtziger, "
                   "klare Flaechen, kontrollierte Verlaeufe nur in der Sonne")),
         _trend(
@@ -112,12 +112,12 @@ def eintraege() -> list[trends.Trend]:
             verkaufswinkel=("Rollenverteilung als Paar-Witz statt Figuren: Sie faehrt, er plant - "
                             "eigene Idee, kein fremder Charakter."),
             motiv=("Ein schlichter Steckbrief-Rahmen mit Nagel oben, darin ein realistisch "
-                   "gezeichnetes Lenkrad mit Lederbezug. Klare Rechteckform unter dem "
-                   "Schriftzug, freigestellt, viel Freiraum."),
+                   "gezeichnetes Lenkrad mit Lederbezug. Gross als Blickfang, klare "
+                   "Rechteckform, freigestellt, viel Freiraum."),
             farben=["Senfgelb", "Schwarz", "Braun"],
             spruch="Die Fahrerin.",
             suchbegriffe=["Partner Shirts Paar", "Paar T-Shirt lustig", "Partnerlook Geschenk"],
-            quellen=[]),
+            quellen=[], aufbau="motiv"),
         _trend(
             "Gangster-Duo Plan",
             warum=("Gegenstueck zur Fahrerin: Paar-Sets verkaufen sich als Doppelpack und "
@@ -129,12 +129,12 @@ def eintraege() -> list[trends.Trend]:
             verkaufswinkel=("Rollenverteilung als Paar-Witz statt Figuren: Er plant, sie faehrt - "
                             "eigene Idee, kein fremder Charakter."),
             motiv=("Ein schlichter Steckbrief-Rahmen mit Nagel oben, darin eine realistisch "
-                   "gezeichnete, zusammengerollte Landkarte mit rotem Kreuz. Klare Rechteckform "
-                   "unter dem Schriftzug, freigestellt, viel Freiraum."),
+                   "gezeichnete, zusammengerollte Landkarte mit rotem Kreuz. Gross als "
+                   "Blickfang, klare Rechteckform, freigestellt, viel Freiraum."),
             farben=["Senfgelb", "Schwarz", "Rot"],
             spruch="Der Plan.",
             suchbegriffe=["Partner Shirts Paar", "Paar T-Shirt lustig", "Partnerlook Geschenk"],
-            quellen=[]),
+            quellen=[], aufbau="motiv"),
         _trend(
             "Feiertage durchgezockt",
             warum=("Der Release liegt fuenf Wochen vor Weihnachten - viele spielen ueber die "
@@ -152,7 +152,7 @@ def eintraege() -> list[trends.Trend]:
             spruch="Stille Nacht, durchgezockt.",
             suchbegriffe=["Gamer Weihnachtsshirt", "Weihnachten Zocker Geschenk",
                           "Gaming Weihnachten T-Shirt"],
-            quellen=[]),
+            quellen=[], aufbau="spruch"),
         _trend(
             "Gesucht Dauerzocker",
             warum=("Steckbrief-Optik passt zum Gangster-Thema des Releases; personalisierte "
@@ -169,7 +169,7 @@ def eintraege() -> list[trends.Trend]:
             farben=["Sepia", "Schwarz", "Rostrot"],
             spruch="Gesucht: Dauerzocker.",
             suchbegriffe=["Zocker Shirt lustig", "Gamer Geschenk Freund", "Steckbrief T-Shirt"],
-            quellen=[_BELEG_PERSONALISIERT]),
+            quellen=[_BELEG_PERSONALISIERT], aufbau="spruch"),
     ]
 
 

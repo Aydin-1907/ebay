@@ -129,6 +129,11 @@ benutzt.
   (`TREND_HYPE_PULS_AKTIV`). Geschützte Hypes wie ein Spiele-Release werden nur
   über das Lebensgefühl genutzt, nie über Name, Cover oder Figuren. Nur Werte,
   die die Quelle selbst nennt. Ansicht im Studio unter Design-Empfehlungen.
+- **Bildaufbau wechselt** (`Trend.aufbau`, 20.11.2026): „motiv“ (großes Motiv,
+  darunter höchstens drei Wörter), „spruch“ (Text im Fokus) oder „nur_motiv“.
+  Die Websuche muss abwechseln; der Prompt setzt die Gewichtung. Kostenlose
+  Kollektionen: `motiv_kollektion.py` (18 Motiv-Ideen) und
+  `gaming_hype_kollektion.py` (7 markenfreie Ideen zum Spiele-Release Nov 2026).
 - **Vom Motiv zum Produkt gibt es einen Weg** (`app/studio/produktweg.py`):
   Druckcheck ohne Wirkung, dann Printify-Entwurf mit Bestätigung. Der Umrechner
   sitzt zwingend dazwischen — `erstelle_produkt` prüft die Auflösung selbst

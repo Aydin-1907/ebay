@@ -64,6 +64,13 @@ KATEGORIEN = {
 }
 
 
+AUFBAUTEN = {
+    "motiv": "Motiv groß, Text klein",
+    "spruch": "Spruch im Fokus",
+    "nur_motiv": "Nur Motiv",
+}
+
+
 class TrendFehler(RuntimeError):
     """Die Trendsuche hat nichts Brauchbares geliefert."""
 
@@ -86,6 +93,12 @@ class Trend:
     risiko: str = ""
     suchbegriffe: list[str] = field(default_factory=list)
     quellen: list[str] = field(default_factory=list)
+    # Bildaufbau (Nutzerwunsch 20.11.2026: abwechseln statt immer Spruch vorn):
+    #   "motiv"     - grosses Hauptmotiv, darunter ein kleiner Schriftzug
+    #   "spruch"    - Spruch gross im Fokus, Motiv klein darunter
+    #   "nur_motiv" - reines Motiv ohne Text
+    # Leer = alter Eintrag ohne Angabe; dann bleibt der bisherige Prompt.
+    aufbau: str = ""
     # Feinere Gruppierung INNERHALB einer Kategorie (z. B. "Familie", "Haustiere"
     # bei "funshirt") - rein fuers Auf-/Zuklappen im Studio, ohne eigene Bedeutung
     # fuer Pruefung oder Erzeugung. Leer = keine Untergruppe.
@@ -109,9 +122,11 @@ Tiki-Taka, Petit Pont), nie ueber Vereine.""",
 Nische. Entwickle kurze, witzige, selbst formulierte deutsche Sprueche (hoechstens acht
 Woerter, grammatisch korrekt, KEINE bekannten Zitate, Songtexte oder Werbeslogans) zu
 Alltagsthemen wie Kaffee, Montag, Buero, Haustiere, Sport-Unlust, Schlaf, Essen, Wetter,
-Technik-Frust. Der Spruch ist der klare Fokus; dazu genau EIN kleines, passendes Motiv als
-Nebenelement, das dem Spruch klar untergeordnet bleibt (kein grosses Bild). Keine Marken,
-keine Prominenten, keine politischen oder anzueglichen Themen.""",
+Technik-Frust, aber auch Hobbys und Lebensgefuehl (Camping, Angeln, Garten, Haustiere,
+Berge, Kaffee). Keine Marken, keine Prominenten, keine politischen oder anzueglichen Themen.
+Wechsle den Bildaufbau ab: bei "spruch" ist der Spruch der Fokus und das Motiv klein; bei
+"motiv" ist EIN grosses, ausdrucksstarkes Motiv der Blickfang (z. B. ein Zelt) und darunter
+steht nur ein kleiner Text mit hoechstens drei Woertern (z. B. "Mein Zuhause").""",
         "stadtliebe": """STADTLIEBE: Minimalistische Motive zu Staedten mit grossen
 Fussballvereinen (z. B. Muenchen, Dortmund, Istanbul, Madrid, Neapel). Nutze nur, was der
 STADT gehoert: Wahrzeichen, Mundart, Essen, Geschichte, Landschaft. Niemals Vereinsnamen,
@@ -200,6 +215,10 @@ Harte Regeln:
   Editorial- oder Siebdruckillustration. Keine Cartoon-, Clipart-, Kinderbuch-, Chibi- oder
   Kawaii-Optik. Anime bleibt eigenstaendig, erwachsen, anatomisch glaubwuerdig und reduziert.
 - Kein Kleidungsstueck, keine Tasse, kein Mockup und kein Mensch, der Ware traegt, im Bild.
+- Bildaufbau abwechseln (Feld aufbau): ungefaehr die Haelfte "motiv" (ein grosses
+  Hauptmotiv als Blickfang, darunter ein kleiner Schriftzug mit hoechstens drei Woertern,
+  der das Bild pointiert, z. B. grosses Zelt + "Mein Zuhause"), der Rest "spruch" (Text
+  im Fokus, Motiv klein) oder "nur_motiv" (ohne Text). Nie alle Empfehlungen gleich.
 - Sprueche sind optional, hoechstens vier Woerter, auf Deutsch und neu formuliert. Wenn Bild und Zielgruppe
   ohne Text staerker funktionieren, bleibt der Spruch leer.
 - Eine einzelne Produktanzeige ist kein ausreichender Nachfragebeleg. Nutze nach
@@ -244,6 +263,8 @@ def antwort_format(anzahl: int) -> dict:
                             "farben": {"type": "array", "minItems": 2, "maxItems": 4,
                                        "items": {"type": "string"}},
                             "spruch": {**text, "description": "Optionaler neuer deutscher Kurzspruch oder leer"},
+                            "aufbau": {**text, "enum": ["motiv", "spruch", "nur_motiv"],
+                                       "description": "motiv = grosses Motiv, kleiner Text darunter; spruch = Text im Fokus; nur_motiv = ohne Text"},
                             "produkt": {**text, "description": "Staerkstes Hauptprodukt plus optionales Zweitprodukt"},
                             "druckhinweis": {**text, "description": "Konkrete Druckumsetzung ohne Produkt oder Mockup im Bild"},
                             "risiko": {**text, "description": "Ehrlicher Einwand oder Pruefpunkt; niemals leer"},
@@ -254,7 +275,7 @@ def antwort_format(anzahl: int) -> dict:
                         },
                         "required": ["thema", "kategorie", "warum", "zeitraum", "zielgruppe",
                                      "kaufmoment", "verkaufswinkel", "motiv", "stil",
-                                     "farben", "spruch", "produkt", "druckhinweis",
+                                     "farben", "spruch", "aufbau", "produkt", "druckhinweis",
                                      "risiko", "suchbegriffe", "quellen"],
                     },
                 },
@@ -354,6 +375,8 @@ def aus_eintrag(d: dict) -> Trend:
         stil=str(d.get("stil") or "").strip(),
         farben=_liste(d.get("farben"))[:5],
         spruch=str(d.get("spruch") or "").strip()[:80],
+        aufbau=(str(d.get("aufbau") or "").strip().lower()
+                if str(d.get("aufbau") or "").strip().lower() in AUFBAUTEN else ""),
         produkt=str(d.get("produkt") or "").strip(),
         druckhinweis=str(d.get("druckhinweis") or "").strip(),
         risiko=str(d.get("risiko") or "").strip(),
@@ -414,6 +437,10 @@ def qualitaetsgrund(t: Trend, erwartete_kategorie: str = "mix") -> str | None:
     if t.kategorie != "anime" and not realistisch and any(w in stil_klein for w in (
             "cartoon", "comic", "chibi", "kawaii", "kinderbuch", "animiert")):
         return "Stil wirkt zu animiert statt realistisch"
+    if t.aufbau == "nur_motiv" and t.spruch.strip():
+        return "Aufbau 'nur Motiv' hat trotzdem einen Spruch"
+    if t.aufbau == "motiv" and len(t.spruch.split()) > 3:
+        return "bei grossem Motiv ist der Text zu lang (hoechstens drei Woerter)"
     if len(t.farben) < 2:
         return "Farbkonzept ist unvollstaendig"
     if len(t.suchbegriffe) < 3:
@@ -444,8 +471,20 @@ def prompt_aus(t: Trend) -> str:
     if t.farben:
         teile.append("Farben: " + ", ".join(t.farben))
     text = ". ".join(teile) + "."
-    if t.spruch:
-        text += f' Mit dem Schriftzug "{t.spruch}" im Bild. {SCHRIFTREGEL}'
+    spruch = "" if t.aufbau == "nur_motiv" else t.spruch
+    if t.aufbau == "motiv":
+        text += (" Bildaufbau: Das Motiv ist der klare Blickfang und nimmt etwa drei "
+                 "Viertel der Hoehe ein.")
+        if spruch:
+            text += (f' Darunter, deutlich kleiner und mittig, der Schriftzug "{spruch}" '
+                     "als knappe Bildunterschrift. "
+                     + SCHRIFTREGEL.replace("Das kleine Motiv", "Das Motiv"))
+    elif t.aufbau == "nur_motiv":
+        text += " Bildaufbau: reines Motiv, kein Text und keine Buchstaben im Bild."
+    elif spruch:
+        if t.aufbau == "spruch":
+            text += " Bildaufbau: Der Schriftzug ist der Fokus, das Motiv bleibt klein."
+        text += f' Mit dem Schriftzug "{spruch}" im Bild. {SCHRIFTREGEL}'
     motivregeln.pruefe_anfrage(text)
     return text
 
@@ -562,7 +601,8 @@ def speichere(db, trends: list[Trend], *, belege: list[str], angebote: dict[str,
         idee.thema = t.thema[:255]
         idee.stichworte = json.dumps(t.suchbegriffe, ensure_ascii=False)
         idee.beschreibung = json.dumps({
-            "kategorie": t.kategorie, "gruppe": t.gruppe, "motiv": t.motiv, "stil": t.stil,
+            "kategorie": t.kategorie, "gruppe": t.gruppe, "aufbau": t.aufbau,
+            "motiv": t.motiv, "stil": t.stil,
             "farben": t.farben, "effekte": [],
             "ware_farbe": None, "warum": t.warum, "zeitraum": t.zeitraum,
             "zielgruppe": t.zielgruppe, "kaufmoment": t.kaufmoment,

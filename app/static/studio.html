@@ -206,6 +206,7 @@
         </div>
         <button class="btn" id="b-trends">Neue Empfehlungen ausarbeiten</button>
         <button class="btn ghost" id="b-funshirt" title="Kuratierte Fun-Shirt-Sprüche mit kleinem passendem Motiv – kostenlos, es entsteht kein Bild">Fun-Shirt-Sprüche laden (0 $)</button>
+        <button class="btn ghost" id="b-motiv" title="Großes Motiv als Blickfang, darunter nur ein kurzer Text – kostenlos, es entsteht kein Bild">Motiv-Ideen laden (0 $)</button>
         <button class="btn ghost" id="b-gaming-hype" title="Markenfreie Motive zum großen Spiele-Release im November 2026 – kostenlos, es entsteht kein Bild">Gaming-Hype laden (0 $)</button>
         <button class="btn ghost" id="b-trends-auswahl" title="Erzeugt nur die angehakten Empfehlungen und prüft danach automatisch eBay">Ausgewählte erzeugen & eBay</button>
         <button class="btn ghost" id="b-trends-alle" title="Erzeugt alle aktuell sichtbaren offenen Empfehlungen nacheinander">Alle sichtbaren Motive erzeugen</button>
@@ -1526,6 +1527,8 @@ function trendKarte(idee) {
   kopf.append(el('span', 'badge', `Empfehlung #${idee.platz ?? '?'}`),
               el('span', 'badge', trendKategorien[d.kategorie] || 'Mix'),
               el('b', null, idee.thema || ''));
+  const aufbauText = { motiv: 'Motiv groß, Text klein', spruch: 'Spruch im Fokus', nur_motiv: 'Nur Motiv' }[d.aufbau];
+  if (aufbauText) kopf.append(el('span', 'badge muted', aufbauText));
   if (d.zeitraum) kopf.append(el('span', 'muted', d.zeitraum));
   karte.append(kopf);
   if (d.motiv) karte.append(trendZeile('Idee: ', d.motiv));
@@ -1729,6 +1732,7 @@ async function kollektionLaden(knopfId, pfad, kategorie, name) {
   }
 }
 $('b-funshirt').onclick = () => kollektionLaden('b-funshirt', 'funshirt-kollektion', 'funshirt', 'Fun-Shirt-Sprüche');
+$('b-motiv').onclick = () => kollektionLaden('b-motiv', 'motiv-kollektion', 'funshirt', 'Motiv groß, Text klein');
 $('b-gaming-hype').onclick = () => kollektionLaden('b-gaming-hype', 'gaming-hype-kollektion', 'videospiele', 'Gaming-Hype');
 
 async function radarErzeugenUndAutoEbay(knoepfe, sammler, leerText) {
