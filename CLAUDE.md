@@ -122,6 +122,13 @@ benutzt.
   in den Modulköpfen: `ebay.de/str/<shop>` ist nur ein Schaufenster (die Liste
   hängt am Verkäufernamen `_ssn`), und **ohne Anmeldung zeigt eBay keine
   Verkaufszahlen** — das Signal ist dann nur die Position.
+- **Hype-Puls** (`app/studio/radar/hype_puls.py`, 20.11.2026): Google Trends
+  „Jetzt im Trend“ (RSS), meistgelesene de.wikipedia-Artikel und ein lokaler
+  Anlass-Kalender – kostenlos, ohne Key. Jeder Punkt bekommt eine Ampel
+  (frei / geschützt / ungeeignet) und fließt als Auftrag in jeden Trend-Lauf
+  (`TREND_HYPE_PULS_AKTIV`). Geschützte Hypes wie ein Spiele-Release werden nur
+  über das Lebensgefühl genutzt, nie über Name, Cover oder Figuren. Nur Werte,
+  die die Quelle selbst nennt. Ansicht im Studio unter Design-Empfehlungen.
 - **Vom Motiv zum Produkt gibt es einen Weg** (`app/studio/produktweg.py`):
   Druckcheck ohne Wirkung, dann Printify-Entwurf mit Bestätigung. Der Umrechner
   sitzt zwingend dazwischen — `erstelle_produkt` prüft die Auflösung selbst

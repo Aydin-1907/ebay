@@ -942,6 +942,18 @@ async def radar_trends(body: TrendLaufIn, db: Session = Depends(get_db)) -> dict
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
+@router.get("/radar/hype-puls")
+async def radar_hype_puls() -> dict:
+    """Was Deutschland gerade sucht und liest, plus Anlaesse der naechsten Wochen.
+
+    Kostenlos und ohne Key (Google Trends RSS, Wikipedia, lokaler Kalender). Aendert
+    nichts und erzeugt nichts - nur Lesen und Einordnen (frei / geschuetzt / ungeeignet).
+    """
+    from app.studio.radar import hype_puls
+
+    return (await hype_puls.sammle()).als_dict()
+
+
 @router.post("/radar/marktanalyse")
 async def radar_marktanalyse(body: MarktanalyseIn, db: Session = Depends(get_db)) -> dict:
     """Was sich bei eBay wirklich verkauft (viele Verkaeufer) + daraus eigene,

@@ -344,3 +344,37 @@ async def test_erst_erzeugen_macht_ein_bild(db, tmp_path):
     assert design.title == "Angeln Herbst" and (tmp_path / design.image_url.split("/")[-1]).is_file()
     db.refresh(idee)
     assert idee.status == "uebernommen" and idee.design_id == design.id
+
+
+@pytest.mark.asyncio
+async def test_hype_puls_landet_in_der_websuche(db):
+    """Der kostenlose Puls wird Teil des Auftrags und steht im Bericht."""
+    from app.studio.radar import hype_puls
+
+    async def puls(heute):
+        return hype_puls.HypeBericht(stand=heute.isoformat(), hypes=[
+            hype_puls.Hype(thema="gta 6", quelle="google_trends", wert="500.000+ Suchanfragen",
+                           url="https://trends.example/gta", ampel=hype_puls.GESCHUETZT)])
+
+    client = _FakeOpenAI([_eintrag("Herbstangeln")])
+    bericht = await trends.lauf(db, s=_s(), client=client, zaehle_angebote=None,
+                                filter_check=_filter, heute=HEUTE, kostenbremse=False,
+                                google_trends_signal=_kein_google_trend,
+                                hype_puls_quelle=puls)
+    assert "AKTUELLER HYPE-PULS" in client.gesehen["input"]
+    assert "[GESCHUETZT: nur Lebensgefuehl]" in client.gesehen["input"]
+    assert bericht["hype_puls"]["hypes"][0]["thema"] == "gta 6"
+
+
+@pytest.mark.asyncio
+async def test_kaputter_hype_puls_stoppt_den_lauf_nicht(db):
+    async def kaputt(heute):
+        raise RuntimeError("kein Netz")
+
+    client = _FakeOpenAI([_eintrag("Herbstangeln")])
+    bericht = await trends.lauf(db, s=_s(), client=client, zaehle_angebote=None,
+                                filter_check=_filter, heute=HEUTE, kostenbremse=False,
+                                google_trends_signal=_kein_google_trend,
+                                hype_puls_quelle=kaputt)
+    assert "HYPE-PULS" not in client.gesehen["input"]
+    assert "hype_puls" not in bericht

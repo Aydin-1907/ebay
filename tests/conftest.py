@@ -41,6 +41,8 @@ os.environ["DASHBOARD_PASSWORD"] = ""
 # Auslieferungszustand AUS ist. Ohne diese Zeile testet die Suite die lokale
 # Einstellung des Entwicklers statt das Verhalten des Programms.
 os.environ["STUDIO_ENABLED"] = "false"
+# Der Hype-Puls liest Google Trends und Wikipedia - Tests bleiben netzwerkfrei.
+os.environ["TREND_HYPE_PULS_AKTIV"] = "false"
 
 # .env komplett aus dem Spiel nehmen, statt Schalter fuer Schalter nachzuziehen:
 # MOCK_EBAY=false steht dort seit dem Probebetrieb fest (echtes Lesen im Alltag),

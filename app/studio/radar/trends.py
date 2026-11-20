@@ -596,6 +596,7 @@ async def lauf(db, *, s: Any, anzahl: int | None = None, client: Any = None,
                google_trends_signal: Callable[[list[str]], Awaitable[float | None]] | None = None,
                kritiker_client: Any = None,
                filter_check: Callable[[str], Any] | None = None,
+               hype_puls_quelle: Callable[[date], Awaitable[Any]] | None = None,
                heute: date | None = None, kostenbremse: bool = True) -> dict:
     """Ein Trend-Lauf: suchen, kritisch pruefen, Marktsignal holen, ablegen. Erzeugt kein Bild."""
     from app.studio import kosten
@@ -606,6 +607,25 @@ async def lauf(db, *, s: Any, anzahl: int | None = None, client: Any = None,
         raise TrendFehler(f"Unbekannte Kategorie: {kategorie}")
     if kostenbremse:
         kosten.pruefe(db, KOSTEN_JE_LAUF_USD)
+
+    # Hype-Puls (kostenlos): was gerade wirklich gesucht wird, als Ausgangspunkt der
+    # Websuche. Ein Ausfall stoppt den Lauf nie - dann recherchiert die Websuche wie bisher.
+    puls = None
+    if hype_puls_quelle is None and getattr(s, "trend_hype_puls_aktiv", False):
+        from app.studio.radar import hype_puls as hype_puls_modul
+
+        hype_puls_quelle = hype_puls_modul.sammle
+    if hype_puls_quelle is not None:
+        from app.studio.radar import hype_puls as hype_puls_modul
+
+        try:
+            puls = await hype_puls_quelle(heute)
+            puls_text = hype_puls_modul.marktkontext(puls)
+            if puls_text:
+                marktkontext = "\n\n".join(t for t in (marktkontext.strip(), puls_text) if t)
+        except Exception as exc:  # noqa: BLE001 - Zugabe, darf den Lauf nicht kippen
+            logger.warning("hype-puls nicht lesbar", extra={"error": str(exc)[:160]})
+            puls = None
     trends, belege = await recherchiere(api_key=s.openai_api_key, modell=s.trend_modell,
                                         anzahl=anzahl, heute=heute, kategorie=kategorie,
                                         marktkontext=marktkontext, client=client)
@@ -659,5 +679,7 @@ async def lauf(db, *, s: Any, anzahl: int | None = None, client: Any = None,
     bericht["abgelehnt"] = kritiker_abgelehnt + bericht["abgelehnt"]
     bericht["vorschlaege"] += len(kritiker_abgelehnt)
     bericht["kosten_usd"] = KOSTEN_JE_LAUF_USD if kostenbremse else 0.0
+    if puls is not None:
+        bericht["hype_puls"] = puls.als_dict()
     logger.info("trend-radar fertig", extra={k: bericht[k] for k in ("neu", "aufgefrischt")})
     return bericht

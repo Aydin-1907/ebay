@@ -201,6 +201,7 @@
           <label for="t-kategorie">Kategorie</label>
           <select id="t-kategorie">
             <option value="funshirt" selected>Fun-Shirt-Sprüche</option>
+            <option value="videospiele">Videospiele (Trend)</option>
           </select>
         </div>
         <button class="btn" id="b-trends">Neue Empfehlungen ausarbeiten</button>
@@ -213,6 +214,14 @@
         <button class="btn ghost klein" type="button" onclick="alleGruppen(true)">Alle Kategorien aufklappen</button>
         <button class="btn ghost klein" type="button" onclick="alleGruppen(false)">Alle Kategorien zuklappen</button>
       </div>
+      <details id="hype-puls" style="margin-top:12px">
+        <summary>Hype-Puls: was Deutschland gerade sucht (kostenlos)</summary>
+        <p class="muted">Google Trends, meistgelesene Wikipedia-Artikel und die nächsten Anlässe.
+          Fließt automatisch in „Neue Empfehlungen ausarbeiten“ ein.
+          <b>Geschützt</b> heißt: Hype nutzen, aber nur das Lebensgefühl – nie Name, Logo, Cover oder Figuren.</p>
+        <button class="btn ghost klein" type="button" id="b-hype-puls">Puls laden (0 $)</button>
+        <div id="hype-liste"></div>
+      </details>
       <div id="t-liste"><p class="muted">Noch keine Empfehlungen ausgearbeitet.</p></div>
     </div>
 
@@ -1653,6 +1662,55 @@ $('b-trends').onclick = async () => {
 };
 
 $('t-kategorie').onchange = () => ladeTrends().catch(zeigeFehler);
+
+const _hypeAmpel = {
+  frei: ['ok', 'frei'],
+  geschuetzt: ['warn', 'geschützt – nur Lebensgefühl'],
+  ungeeignet: ['bad', 'ungeeignet'],
+};
+const _hypeQuelle = { google_trends: 'Google Trends', wikipedia: 'Wikipedia', kalender: 'Anlass' };
+
+$('b-hype-puls').onclick = async () => {
+  const knopf = $('b-hype-puls');
+  const ziel = $('hype-liste');
+  knopf.disabled = true;
+  knopf.textContent = 'Puls wird gelesen …';
+  try {
+    const b = await hole('/api/v1/studio/radar/hype-puls');
+    ziel.replaceChildren();
+    for (const f of b.fehler || []) {
+      ziel.append(el('p', 'muted', `${_hypeQuelle[f.quelle] || f.quelle} gerade nicht lesbar: ${f.grund}`));
+    }
+    const tabelle = el('table');
+    for (const h of b.hypes || []) {
+      const zeile = el('tr');
+      const [klasse, text] = _hypeAmpel[h.ampel] || ['muted', h.ampel];
+      const thema = el('td');
+      if (h.url) {
+        const a = el('a', null, h.thema);
+        a.href = h.url; a.target = '_blank'; a.rel = 'noopener';
+        thema.append(a);
+      } else {
+        thema.textContent = h.thema;
+      }
+      const info = h.quelle === 'kalender'
+        ? `${h.datum} · listen bis ${h.listen_bis} · ${h.kontext}`
+        : [h.wert, h.kontext, h.grund].filter(Boolean).join(' · ');
+      const ampel = el('td');
+      ampel.append(el('span', `badge ${klasse}`, text));
+      zeile.append(el('td', 'muted', _hypeQuelle[h.quelle] || h.quelle), thema, ampel,
+                   el('td', 'muted', info));
+      tabelle.append(zeile);
+    }
+    ziel.append(tabelle);
+  } catch (err) {
+    zeigeFehler(err);
+  } finally {
+    knopf.disabled = false;
+    knopf.textContent = 'Puls neu laden (0 $)';
+  }
+};
+
 
 async function kollektionLaden(knopfId, pfad, kategorie, name) {
   const knopf = $(knopfId);

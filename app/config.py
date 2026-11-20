@@ -145,6 +145,11 @@ class Settings(BaseSettings):
     # erfinden, wenn Google blockt oder nichts zurueckgibt. Default an; .env-Schalter
     # TREND_GOOGLE_TRENDS_AKTIV=false schaltet es ab (z. B. fuer netzwerkfreie Tests).
     trend_google_trends_aktiv: bool = True
+    # Hype-Puls (app/studio/radar/hype_puls.py): Google-Trends "Jetzt im Trend",
+    # meistgelesene Wikipedia-Artikel und Anlass-Kalender als Ausgangspunkt jeder
+    # Websuche. Kostenlos, kein Key. Nutzerwunsch (20.11.2026): trendbasiert statt
+    # allgemein. TREND_HYPE_PULS_AKTIV=false schaltet es ab.
+    trend_hype_puls_aktiv: bool = True
     # Zweite, unabhaengige Meinung je Empfehlung (app/studio/radar/kritiker.py).
     # Nutzerwunsch (17.11.2026): immer die besten Empfehlungen, nicht die billigsten -
     # deshalb per Default AN, trotz kleinem Zusatzaufruf je Vorschlag.
