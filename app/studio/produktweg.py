@@ -33,12 +33,41 @@ from typing import Any
 from app.studio.postprocess.umrechner import (
     FormatFehler,
     platziere,
+    platziere_brustlogo,
     pruefe_aufloesung,
     speichere,
     trimme,
     zielformat,
 )
 from app.studio.printify.products import PRODUCT_TYPES
+
+#: Standardgroesse des Brustlogos in Zentimetern (Nutzerwunsch 20.11.2026).
+BRUSTLOGO_BREITE_CM = 8.0
+
+
+def _ist_brustlogo_motiv(design: Any) -> bool:
+    """Gehoert dieses Motiv zur Icon-Kollektion (random_kollektion.py)?
+
+    Diese Motive werden NICHT gross und zentriert gedruckt wie alle anderen,
+    sondern klein als Brustlogo links (Nutzerwunsch 20.11.2026, woertlich:
+    "nicht zentral in der mitte sondern als brust logo link in 8 cm groesse ...
+    aber nur bei diesen random motiven"). Die Zugehoerigkeit steht in der
+    Idee, die beim Erzeugen in ``design.meta_json`` mitgespeichert wurde - kein
+    separates Feld noetig, keine Gefahr, es beim naechsten Umbau zu vergessen.
+    """
+    import json
+
+    from app.studio.radar.random_kollektion import GRUPPE as ICON_GRUPPE
+
+    meta = getattr(design, "meta_json", None)
+    if not meta:
+        return False
+    try:
+        daten = json.loads(meta) if isinstance(meta, str) else meta
+    except (ValueError, TypeError):
+        return False
+    beschreibung = ((daten.get("radar") or {}).get("beschreibung") or {})
+    return beschreibung.get("gruppe") == ICON_GRUPPE
 
 logger = logging.getLogger("app.studio.produktweg")
 
@@ -187,6 +216,25 @@ def erzeuge_druckdatei(design: Any, *, produkttyp_key: str, bildordner: Path,
     gehoert zu den Angaben, die ein Verkaeufer kennen muss. Der Dateiname traegt
     den Faktor mit, damit man es einer Druckdatei spaeter noch ansieht.
     """
+    if _ist_brustlogo_motiv(design):
+        format_key = FORMAT_JE_TYP.get(produkttyp_key)
+        if format_key != "textil":
+            raise MotivFehler(
+                "Das Brustlogo-Format ist nur fuer Textildruck (T-Shirt/Hoodie) "
+                f"vorgesehen, nicht fuer '{produkttyp_key}'.")
+        quelle = bildpfad(design, bildordner)
+        from PIL import Image
+
+        with Image.open(quelle) as bild:
+            fertig = platziere_brustlogo(bild, format_key, breite_cm=BRUSTLOGO_BREITE_CM)
+        name = f"{quelle.stem}__{format_key}__brustlogo.png"
+        ziel = bildordner / DRUCK_ORDNER / name
+        speichere(fertig, ziel)
+        logger.info("Druckdatei erzeugt (Brustlogo links, %.0f cm)", BRUSTLOGO_BREITE_CM,
+                    extra={"motiv": getattr(design, "id", None), "format": format_key,
+                           "datei": name})
+        return ziel
+
     ergebnis = pruefe(design, produkttyp_key=produkttyp_key, bildordner=bildordner)
     if not ergebnis.moeglich and not (hochskalieren and ergebnis.mit_vergroesserung):
         grund = ergebnis.grund or "Motiv nicht druckfaehig."

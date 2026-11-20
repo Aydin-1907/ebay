@@ -207,6 +207,7 @@
         <button class="btn ghost" id="b-funshirt" title="Kuratierte Fun-Shirt-Sprüche mit kleinem passendem Motiv – kostenlos, es entsteht kein Bild">Fun-Shirt-Sprüche laden (0 $)</button>
         <button class="btn ghost" id="b-motiv" title="Großes Motiv als Blickfang, darunter nur ein kurzer Text – kostenlos, es entsteht kein Bild">Motiv-Ideen laden (0 $)</button>
         <button class="btn ghost" id="b-tiere" title="Reine Tiermotive, realistisch und animiert, ohne Text – kostenlos, es entsteht kein Bild">Tiermotive laden (0 $)</button>
+        <button class="btn ghost" id="b-icons" title="Kleine Icon-Motive (Emoji, Herz, Baum, Sterne, ...) – werden als Brustlogo links (8 cm) statt groß mittig gedruckt, kostenlos">Icon-Motive laden (0 $)</button>
         <button class="btn ghost" id="b-trends-auswahl" title="Erzeugt nur die angehakten Empfehlungen und prüft danach automatisch eBay">Ausgewählte erzeugen & eBay</button>
         <button class="btn ghost" id="b-trends-alle" title="Erzeugt alle aktuell sichtbaren offenen Empfehlungen nacheinander">Alle sichtbaren Motive erzeugen</button>
         <span class="muted">Dauert etwa 2–4 Minuten · recherchiert die gewählte Kategorie</span>
@@ -1733,6 +1734,7 @@ async function kollektionLaden(knopfId, pfad, kategorie, name) {
 $('b-funshirt').onclick = () => kollektionLaden('b-funshirt', 'funshirt-kollektion', 'funshirt', 'Fun-Shirt-Sprüche');
 $('b-motiv').onclick = () => kollektionLaden('b-motiv', 'motiv-kollektion', 'funshirt', 'Motiv groß, Text klein');
 $('b-tiere').onclick = () => kollektionLaden('b-tiere', 'tier-kollektion', 'funshirt', 'Tiermotive');
+$('b-icons').onclick = () => kollektionLaden('b-icons', 'random-kollektion', 'funshirt', 'Icon-Motive');
 
 async function radarErzeugenUndAutoEbay(knoepfe, sammler, leerText) {
   if (!knoepfe.length) {

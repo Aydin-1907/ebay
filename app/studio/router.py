@@ -1080,6 +1080,18 @@ def radar_tier_kollektion(db: Session = Depends(get_db)) -> dict:
     return tier_kollektion.lade(db)
 
 
+@router.post("/radar/random-kollektion")
+def radar_random_kollektion(db: Session = Depends(get_db)) -> dict:
+    """Kleine Icon-Motive (Emoji, Herz, Baum, Sterne, ...). Kostenlos, erzeugt kein Bild.
+
+    Werden spaeter als Brustlogo links (8 cm) statt gross mittig gedruckt -
+    siehe ``produktweg._ist_brustlogo_motiv``.
+    """
+    from app.studio.radar import random_kollektion
+
+    return random_kollektion.lade(db)
+
+
 @router.post("/radar/stadtliebe-kollektion")
 def radar_stadtliebe_kollektion(db: Session = Depends(get_db)) -> dict:
     """Minimalistische Stadtmotive (ohne Vereinsbezug) als Empfehlungen laden. Kostenlos."""

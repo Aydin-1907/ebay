@@ -144,6 +144,54 @@ def platziere(
     return ImageOps.pad(motiv, z.groesse, method=Image.LANCZOS, color=fuellung, centering=(0.5, 0.5))
 
 
+def platziere_brustlogo(
+    bild: Image.Image,
+    ziel: Zielformat | str,
+    *,
+    breite_cm: float = 8.0,
+    anker: tuple[float, float] = (0.72, 0.22),
+) -> Image.Image:
+    """Motiv KLEIN als Brustlogo platzieren, statt gross und mittig.
+
+    Nutzerwunsch (20.11.2026): bestimmte Motive (z. B. die Icon-Kollektion)
+    sollen nicht zentral und grossflaechig gedruckt werden, sondern als kleines
+    Brustlogo links, in echter Groesse (Durchmesser/Breite in Zentimetern).
+
+    Die Zielflaeche bleibt die volle Druckleinwand (z. B. 4500x5400) - genau wie
+    bei ``platziere()`` - damit Printify sie weiterhin 1:1 in den Druckbereich
+    einpasst. Nur die Position des Motivs INNERHALB dieser Leinwand aendert
+    sich: klein und zum Anker hin verschoben statt gross und mittig.
+
+    ``anker`` ist normiert (0..1) relativ zur Zielflaeche, (0,0) = oben links.
+    Vorgabe 0.72/0.22 entspricht der ueblichen linken Brustposition.
+    """
+    z = zielformat(ziel) if isinstance(ziel, str) else ziel
+    motiv = trimme(bild)
+
+    # Die noetige Aufloesung richtet sich nach der ECHTEN Druckgroesse (8 cm) und
+    # der ueblichen Mindest-DPI-Schwelle (``z.min_dpi``) - nicht nach der viel
+    # groesseren Referenzbreite des vollflaechigen Textildrucks. Sonst wird ein
+    # kleines, flaches Icon-Motiv abgelehnt, obwohl es bei 8 cm laengst scharf
+    # genug ist (Fund 20.11.2026: 593 px reichen locker fuer 150 DPI bei 3,15
+    # Zoll, waeren aber an der 300-DPI-Vollflaechen-Formel gescheitert).
+    ziel_breite_px = round((breite_cm / 2.54) * z.min_dpi)
+    if motiv.width < ziel_breite_px:
+        raise FormatFehler(
+            f"Aufloesung zu gering fuer ein {breite_cm:g}-cm-Brustlogo: Motiv hat "
+            f"{motiv.width}px Breite, noetig sind mindestens {ziel_breite_px}px. "
+            "Motiv groesser erzeugen."
+        )
+    skala = ziel_breite_px / motiv.width
+    klein = motiv.resize((ziel_breite_px, max(1, round(motiv.height * skala))),
+                         Image.LANCZOS)
+
+    leinwand = Image.new("RGBA", z.groesse, (0, 0, 0, 0))
+    x = round(anker[0] * z.breite - klein.width / 2)
+    y = round(anker[1] * z.hoehe - klein.height / 2)
+    leinwand.paste(klein, (x, y), klein)
+    return leinwand
+
+
 def repariere_gestreckt(bild: Image.Image, faktor: float = 1.25) -> Image.Image:
     """Ein breitgezogenes Motiv zurueckstauchen.
 
