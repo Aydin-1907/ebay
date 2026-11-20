@@ -79,6 +79,69 @@ _REALISTISCH: tuple[_Eintrag, ...] = (
     ("Panda-Realistisch", "Ein sitzender Panda haelt einen Bambushalm, das "
      "schwarz-weisse Fellmuster naturgetreu gezeichnet",
      "Panda- und Zoofans", "Panda", "Schwarz, Weiss, Bambusgruen"),
+    ("Pinguin-Realistisch", "Ein Kaiserpinguin steht aufrecht im Halbprofil, das "
+     "Gefieder fein schattiert, der Schnabel leicht geoeffnet",
+     "Polarfans und Pinguinliebhaber", "Pinguin", "Schwarz, Weiss, Orange"),
+    ("Hase-Realistisch", "Ein Feldhase sitzt geduckt im hohen Gras, die Loeffel "
+     "aufgestellt, das Fell fein texturiert",
+     "Naturfreunde und Hasenliebhaber", "Hase", "Sandbraun, Weiss, Anthrazit"),
+    ("Eichhoernchen-Realistisch", "Ein Eichhoernchen sitzt aufrecht auf einem Ast "
+     "und haelt eine Nuss mit beiden Vorderpfoten, der buschige Schwanz hochgestellt",
+     "Garten- und Waldfans", "Eichhoernchen", "Rotbraun, Creme, Anthrazit"),
+    ("Waschbaer-Realistisch", "Ein Waschbaer sitzt aufrecht, die typische "
+     "Gesichtsmaske naturgetreu schattiert, die Vorderpfoten zusammengelegt",
+     "Naturfreunde und Waschbaer-Fans", "Waschbaer", "Graubraun, Schwarz, Creme"),
+    ("Flamingo-Realistisch", "Ein Flamingo steht auf einem Bein im seichten "
+     "Wasser, der lange Hals elegant gebogen, das Gefieder fein gezeichnet",
+     "Fans exotischer Vogelmotive", "Flamingo", "Pink, Korallrot, Anthrazit"),
+    ("Schildkroete-Realistisch", "Eine Meeresschildkroete schwimmt seitlich, der "
+     "Panzer mit klar gezeichnetem Musterwerk, die Flossen ausgestreckt",
+     "Meeres- und Naturfans", "Schildkroete", "Olivgruen, Sandbeige, Petrol"),
+    ("Zebra-Realistisch", "Ein Zebra steht im Halbprofil, das Streifenmuster "
+     "praezise und symmetrisch, die Maehne kurz und aufrecht",
+     "Safari- und Afrikafans", "Zebra", "Schwarz, Weiss, Anthrazit"),
+    ("Giraffe-Realistisch", "Eine Giraffe steht mit erhobenem Hals im Halbprofil, "
+     "das Fleckenmuster fein und unregelmaessig gezeichnet",
+     "Safari- und Zoofans", "Giraffe", "Ockergelb, Braun, Creme"),
+    ("Erdmaennchen-Realistisch", "Ein Erdmaennchen steht aufrecht Wache haltend "
+     "auf den Hinterbeinen, die Vorderpfoten vor der Brust",
+     "Fans afrikanischer Wildtiere", "Erdmaennchen", "Sandbraun, Creme, Anthrazit"),
+    ("Papagei-Realistisch", "Ein Ara sitzt seitlich auf einem Ast, das bunte "
+     "Gefieder in klaren Federreihen, der Schnabel kraeftig gebogen",
+     "Vogelliebhaber und Exotik-Fans", "Papagei", "Scharlachrot, Kobaltblau, Gelb"),
+    ("Seepferdchen-Realistisch", "Ein Seepferdchen schwebt aufrecht im Wasser, "
+     "der geringelte Schwanz um einen Seegrashalm gelegt",
+     "Meeresfans und Aquarienfreunde", "Seepferdchen", "Korallgelb, Petrol, Creme"),
+    ("Qualle-Realistisch", "Eine Qualle schwebt mit durchscheinendem Schirm und "
+     "fein gewellten Tentakeln im freien Wasser",
+     "Fans ruhiger Meeresmotive", "Qualle", "Lavendel, Petrol, Weiss"),
+    ("Otter-Realistisch", "Ein Fischotter liegt auf dem Ruecken im Wasser und "
+     "haelt einen kleinen Stein auf dem Bauch, das Fell nass gezeichnet",
+     "Fans verspielter Wildtiere", "Otter", "Braun, Creme, Anthrazit"),
+    ("Chamaeleon-Realistisch", "Ein Chamaeleon klammert sich seitlich an einen "
+     "Ast, die Haut fein geschuppt, ein Auge nach vorn gerichtet",
+     "Terraristik- und Exotik-Fans", "Chamaeleon", "Laubgruen, Ockergelb, Anthrazit"),
+    ("Nashorn-Realistisch", "Ein Nashorn steht im Halbprofil, die Haut in tiefen "
+     "Falten gezeichnet, das Horn kraeftig und leicht gebogen",
+     "Safari- und Naturschutzfans", "Nashorn", "Steingrau, Anthrazit, Beige"),
+    ("Kaenguru-Realistisch", "Ein Kaenguru steht aufrecht auf den Hinterbeinen "
+     "gestuetzt, der Schwanz als dritte Stuetze, das Fell kurz und dicht",
+     "Fans australischer Wildtiere", "Kaenguru", "Sandbraun, Creme, Anthrazit"),
+    ("Lama-Realistisch", "Ein Lama steht im Halbprofil, der lange Hals aufrecht, "
+     "das wollige Fell in groben Strähnen gezeichnet",
+     "Fans von Anden-Tieren", "Lama", "Beige, Braun, Creme"),
+    ("Biber-Realistisch", "Ein Biber sitzt am Ufer und haelt einen kleinen "
+     "Ast mit beiden Pfoten, der flache Schwanz seitlich sichtbar",
+     "Naturfreunde und Biberfans", "Biber", "Dunkelbraun, Creme, Anthrazit"),
+    ("Luchs-Realistisch", "Ein Luchs sitzt aufrecht im Schnee, die Pinselohren "
+     "deutlich erkennbar, das gefleckte Fell fein texturiert",
+     "Fans heimischer Raubkatzen", "Luchs", "Sandbraun, Weiss, Anthrazit"),
+    ("Schneeeule-Realistisch", "Eine Schneeeule sitzt auf einem Felsen, das "
+     "weisse Gefieder mit feinen dunklen Sprenkeln gezeichnet",
+     "Fans arktischer Vogelmotive", "Schneeeule", "Weiss, Hellgrau, Anthrazit"),
+    ("Dachs-Realistisch", "Ein Dachs steht im Profil mit gesenktem Kopf, das "
+     "markante schwarz-weisse Gesichtsmuster klar gezeichnet",
+     "Wald- und Wildtierfans", "Dachs", "Graubraun, Weiss, Schwarz"),
 )
 
 _ANIMIERT: tuple[_Eintrag, ...] = (
@@ -122,6 +185,71 @@ _ANIMIERT: tuple[_Eintrag, ...] = (
      "Grinsen und erhobener Pfote, die typische Gesichtsmaske klar gezeichnet",
      "Fans frecher, verspielter Tiermotive", "Waschbaer cartoon",
      "Graubraun, Schwarz, Creme"),
+    ("Pinguin-Animiert2", "Ein runder Zeichentrick-Pinguin rutscht froehlich auf "
+     "dem Bauch, die Fluegel seitlich ausgestreckt, breites Laecheln",
+     "Kinder und Fans verspielter Wintertiere", "Pinguin cartoon rutschend",
+     "Schwarz, Weiss, Hellblau"),
+    ("Hase-Animiert2", "Ein Zeichentrick-Hase haeltet in froher Pose einen "
+     "kleinen Osterkorb, grosse glaenzende Augen",
+     "Fans froehlicher Fruehlingsmotive", "Osterhase cartoon", "Creme, Gruen, Rosa"),
+    ("Eichhoernchen-Animiert", "Ein rundliches Zeichentrick-Eichhoernchen sitzt "
+     "mit aufgeblasenen Backen und haelt eine riesige Nuss",
+     "Fans niedlicher Waldtier-Motive", "Eichhoernchen cartoon",
+     "Rotbraun, Creme, Anthrazit"),
+    ("Waschbaer-Animiert2", "Ein verschmitzter Zeichentrick-Waschbaer blinzelt "
+     "mit einem Auge, die Pfoten hinter dem Ruecken versteckt",
+     "Fans frecher Tiermotive", "Waschbaer frech cartoon", "Graubraun, Creme, Schwarz"),
+    ("Flamingo-Animiert", "Ein runder Zeichentrick-Flamingo balanciert auf einem "
+     "Bein mit ausgebreiteten Fluegeln, breites Laecheln",
+     "Fans froehlicher Sommer-Tiermotive", "Flamingo cartoon", "Pink, Weiss, Gelb"),
+    ("Schildkroete-Animiert", "Eine runde Zeichentrick-Schildkroete laechelt "
+     "entspannt, der Panzer mit einfachen bunten Sechsecken gemustert",
+     "Fans gemuetlicher Tiermotive", "Schildkroete cartoon", "Hellgruen, Gelb, Creme"),
+    ("Loewe-Animiert2", "Ein kleiner Zeichentrick-Loewenjunges spielt mit dem "
+     "eigenen Schwanz, grosse treuherzige Augen",
+     "Fans niedlicher Safari-Motive", "Loewenjunges cartoon", "Goldgelb, Creme, Braun"),
+    ("Zebra-Animiert", "Ein froehliches Zeichentrick-Zebra tänzelt seitlich, "
+     "die Streifen in weichen runden Formen gezeichnet",
+     "Fans froehlicher Safari-Motive", "Zebra cartoon", "Schwarz, Weiss, Rosa"),
+    ("Giraffe-Animiert", "Eine Zeichentrick-Giraffe mit langem geschwungenem "
+     "Hals laechelt breit, grosse Wimpern, runde Flecken",
+     "Fans niedlicher Safari-Motive", "Giraffe cartoon", "Gelb, Braun, Creme"),
+    ("Erdmaennchen-Animiert", "Ein freches Zeichentrick-Erdmaennchen steht "
+     "Wache mit Sonnenbrille, breites Grinsen",
+     "Fans frecher Tiermotive", "Erdmaennchen cartoon", "Sandbraun, Schwarz, Creme"),
+    ("Papagei-Animiert", "Ein bunter Zeichentrick-Papagei sitzt schraeg auf "
+     "einem Ast und singt mit weit geoeffnetem Schnabel",
+     "Fans froehlicher, bunter Tiermotive", "Papagei cartoon", "Rot, Gruen, Gelb"),
+    ("Seepferdchen-Animiert", "Ein rundes Zeichentrick-Seepferdchen schwimmt "
+     "mit geschwungenem Schwanz und froehlichem Laecheln",
+     "Fans niedlicher Meeresmotive", "Seepferdchen cartoon", "Gelb, Petrol, Creme"),
+    ("Qualle-Animiert", "Eine runde Zeichentrick-Qualle mit geschwungenen "
+     "Tentakeln und froehlichem Gesicht schwebt sanft",
+     "Fans niedlicher Meeresmotive", "Qualle cartoon", "Rosa, Lavendel, Creme"),
+    ("Otter-Animiert", "Ein verspielter Zeichentrick-Otter liegt auf dem Ruecken "
+     "und jongliert mit einem kleinen Stein, breites Laecheln",
+     "Fans verspielter Tiermotive", "Otter cartoon", "Braun, Creme, Hellblau"),
+    ("Chamaeleon-Animiert", "Ein buntes Zeichentrick-Chamaeleon rollt die Zunge "
+     "spielerisch aus, grosse drehbare Augen",
+     "Fans bunter, verspielter Tiermotive", "Chamaeleon cartoon", "Gruen, Gelb, Pink"),
+    ("Nashorn-Animiert", "Ein rundliches Zeichentrick-Nashorn laechelt breit, "
+     "das Horn klein und abgerundet gezeichnet",
+     "Fans niedlicher Safari-Motive", "Nashorn cartoon", "Grau, Rosa, Creme"),
+    ("Nilpferd-Animiert", "Ein rundes Zeichentrick-Nilpferd schwebt vergnuegt im "
+     "Wasser, nur Augen und Ohren ragen heraus, breites Laecheln",
+     "Fans niedlicher Flusstier-Motive", "Nilpferd cartoon", "Graublau, Rosa, Creme"),
+    ("Kaenguru-Animiert", "Ein froehliches Zeichentrick-Kaenguru hupft mit einem "
+     "Jungen im Beutel, grosse treue Augen",
+     "Fans niedlicher Tierfamilien-Motive", "Kaenguru cartoon", "Sandbraun, Creme, Rosa"),
+    ("Lama-Animiert", "Ein freches Zeichentrick-Lama streckt die Zunge raus, "
+     "wolliges Fell in weichen runden Buescheln",
+     "Fans frecher, verspielter Tiermotive", "Lama cartoon", "Beige, Pink, Creme"),
+    ("Biber-Animiert", "Ein geschaeftiger Zeichentrick-Biber traegt einen "
+     "viel zu grossen Ast mit stolzem Laecheln",
+     "Fans verspielter Waldtier-Motive", "Biber cartoon", "Braun, Creme, Gruen"),
+    ("Faultier-Animiert2", "Ein winkendes Zeichentrick-Faultier haengt kopfueber "
+     "von einem Ast, traeumerisches Laecheln",
+     "Fans entspannter Tiermotive", "Faultier winkend cartoon", "Graubraun, Hellgruen, Creme"),
 )
 
 ANZAHL = len(_REALISTISCH) + len(_ANIMIERT)

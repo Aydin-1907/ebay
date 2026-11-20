@@ -110,6 +110,58 @@ _EINTRAEGE: tuple[_Eintrag, ...] = (
      "ueber dem hoechsten steht eine kleine runde Sonne, darunter ein schmaler See als Spiegelung",
      "", "Bergfans, die schlichte Linienmotive statt Sprueche tragen", "Berge",
      "Dunkelblau, Senfgelb"),
+    ("Surfbrett-Welle", "Ein grosses Surfbrett steht aufrecht im Sand, dahinter rollt "
+     "eine einzelne stilisierte Wellenlinie heran",
+     "Horizont.", "Surfer und Strandfans, die vom naechsten Urlaub traeumen", "Surfen",
+     "Petrol, Sandbeige, Weiss"),
+    ("Kletterseil-Gipfel", "Ein aufgerolltes Kletterseil mit Karabiner liegt vor einer "
+     "schroffen Felswand, die in eine spitze Gipfelsilhouette ausläuft",
+     "Hoeher geht immer.", "Kletterer, die jedes Wochenende an der Wand haengen", "Klettern",
+     "Steingrau, Signalrot, Anthrazit"),
+    ("Segelboot-Horizont", "Ein grosses Segelboot mit gesetztem Hauptsegel gleitet seitlich "
+     "ueber ruhige Wellenlinien, eine einzelne Moewe zieht darueber",
+     "Kurs halten.", "Segler und Wassersportfans, die den Wind lieben", "Segeln",
+     "Marineblau, Weiss, Senfgelb"),
+    ("Akkordeon-Takt", "Ein grosses, detailliert gezeichnetes Akkordeon mit auseinandergezogenem "
+     "Balg steht leicht schraeg im Bild",
+     "Eigener Takt.", "Hobbymusiker mit Vorliebe fuer traditionelle Instrumente", "Akkordeon",
+     "Perlmuttweiss, Bordeaux, Gold"),
+    ("Schreibmaschine-Kapitel", "Eine grosse alte Schreibmaschine mit eingespanntem Blatt, "
+     "aus der Walze ragt ein einzelnes beschriebenes Blatt",
+     "Nächstes Kapitel.", "Schreibfans und Autoren mit Vorliebe fuer Nostalgie", "Schreiben",
+     "Anthrazit, Elfenbein, Kupfer"),
+    ("Globus-Fernweh", "Ein grosser alter Standglobus mit sichtbaren Laendergrenzen und "
+     "einer kleinen Messingfassung am Fuss",
+     "Naechstes Ziel.", "Reisefans mit Vorliebe fuer Fernweh und alte Landkarten", "Reisen",
+     "Ozeanblau, Messing, Creme"),
+    ("Weinflasche-Ernte", "Eine grosse, schlanke Weinflasche mit einfachem Etikett, davor "
+     "liegt eine einzelne Traubenranke mit drei Beeren",
+     "Gute Ernte.", "Weinliebhaber, die Wert auf einfache Eleganz legen", "Wein",
+     "Bordeaux, Olivgruen, Creme"),
+    ("Teekanne-Ruhe", "Eine grosse, rundliche Teekanne mit aufsteigender Dampffahne, "
+     "daneben liegt ein einzelnes Teeblatt",
+     "Kurz durchatmen.", "Teeliebhaber, die ihre Ruhepause zelebrieren", "Tee",
+     "Jadegruen, Creme, Gold"),
+    ("Werkzeugkasten-Ordnung", "Ein grosser, leicht geoeffneter Werkzeugkasten mit sauber "
+     "sortierten Schraubenziehern und einem Schraubenschluessel obenauf",
+     "Alles im Griff.", "Hobbyhandwerker, die Ordnung in der Werkstatt lieben", "Werkzeug",
+     "Stahlblau, Rostrot, Anthrazit"),
+    ("Angelrute-Geduld", "Eine grosse Angelrute steht schraeg in einer Rutenhalterung am "
+     "Ufer, die Schnur haengt locker ins ruhige Wasser",
+     "Geduld siegt.", "Angler, die die Ruhe am Wasser geniessen", "Angeln",
+     "Olivgruen, Silbergrau, Dunkelblau"),
+    ("Gitarre-Lagerfeuer", "Eine grosse akustische Gitarre lehnt an einem kleinen Baumstumpf, "
+     "eine einzelne Note schwebt ueber dem Klangloch",
+     "Eigene Melodie.", "Hobbymusiker, die am liebsten draussen spielen", "Gitarre",
+     "Holzbraun, Creme, Anthrazit"),
+    ("Skateboard-Tempo", "Ein grosses Skateboard steht leicht angekippt mit sichtbaren "
+     "Rollen, eine kurze Bewegungslinie deutet Tempo an",
+     "Volles Tempo.", "Skater, die jede freie Minute auf dem Board verbringen", "Skateboard",
+     "Anthrazit, Signalrot, Hellgrau"),
+    ("Fahrradkorb-Blumen", "Ein grosser Fahrradkorb aus Weidengeflecht, gefuellt mit drei "
+     "einfachen Wiesenblumen, am Lenker befestigt",
+     "Langsamer fahren.", "Fahrradfans mit Vorliebe fuer entschleunigte Touren", "Fahrrad",
+     "Weidenbraun, Wiesengruen, Mohnrot"),
 )
 
 ANZAHL = len(_EINTRAEGE)

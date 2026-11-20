@@ -108,6 +108,70 @@ _EINTRAEGE: tuple[_Eintrag, ...] = (
      "knochige Finger in einen nebligen Nachthimmel greifen",
      "Fans von Gothic- und Horror-Aesthetik", "Gruselbaum",
      "Anthrazit, Nebelgrau, Nachtblau", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Skelett-Skateboarder", "Ein Skelett steht in Schrittstellung auf einem Skateboard, "
+     "ein Arm zum Gleichgewicht ausgestreckt, der Umhang weht leicht nach hinten",
+     "Skater mit Sinn fuer schwarzen Humor", "Skelett Skateboard",
+     "Knochenweiss, Anthrazit, Petrol", _WARUM_SKELETT, _ZEITRAUM_ALLTAG),
+    ("Skelett-Lagerfeuer", "Ein sitzendes Skelett haelt die Handknochen waermend vor ein "
+     "kleines Lagerfeuer, der Schaedel leicht zur Seite geneigt",
+     "Camper mit Sinn fuer schwarzen Humor", "Skelett Lagerfeuer",
+     "Knochenweiss, Orange, Anthrazit", _WARUM_SKELETT, _ZEITRAUM_ALLTAG),
+    ("Skelett-Schachspieler", "Ein sitzendes Skelett stuetzt das Kinn auf eine Handknochen "
+     "und betrachtet konzentriert ein Schachbrett vor sich",
+     "Schachfans mit Sinn fuer schwarzen Humor", "Skelett Schach",
+     "Knochenweiss, Anthrazit, Bordeaux", _WARUM_SKELETT, _ZEITRAUM_ALLTAG),
+    ("Skelett-Schwimmer", "Ein Skelett schwimmt mit ausgestreckten Armen durchs Wasser, "
+     "kleine Wasserspritzer loesen sich von den Fingerknochen",
+     "Schwimmer mit Sinn fuer schwarzen Humor", "Skelett Schwimmen",
+     "Knochenweiss, Tuerkis, Anthrazit", _WARUM_SKELETT, _ZEITRAUM_ALLTAG),
+    ("Skelett-Pizzabaecker", "Ein stehendes Skelett haelt eine runde Pizza auf einem Schieber "
+     "in die Hoehe, der Kiefer freudig geoeffnet",
+     "Pizzafans mit Sinn fuer schwarzen Humor", "Skelett Pizza",
+     "Knochenweiss, Tomatenrot, Anthrazit", _WARUM_SKELETT, _ZEITRAUM_ALLTAG),
+    ("Skelett-Schrauber", "Ein kniendes Skelett haelt einen Schraubenschluessel an ein "
+     "umgedrehtes Fahrrad, eine lose Schraube liegt daneben",
+     "Hobbyschrauber mit Sinn fuer schwarzen Humor", "Skelett Werkstatt",
+     "Knochenweiss, Rostrot, Anthrazit", _WARUM_SKELETT, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Werwolf", "Ein aufrecht stehender Werwolf mit zerzaustem Fell und erhobenen "
+     "Krallen heult lautlos vor einem grossen Vollmond",
+     "Fans von Gothic- und Horror-Aesthetik", "Werwolf",
+     "Dunkelbraun, Nachtblau, Anthrazit", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Vampirfledermaeuse", "Ein dichter Schwarm spitzzaehniger Fledermaeuse stuerzt "
+     "aus einer dunklen Hoehlenoeffnung heraus",
+     "Fans von Gothic- und Horror-Aesthetik", "Vampirfledermaus",
+     "Tiefschwarz, Blutrot, Anthrazit", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Mumie", "Eine aufrecht stehende, lose umwickelte Mumie mit ausgestreckten "
+     "Armen und leeren, dunklen Augenhoehlen",
+     "Fans von Gothic- und Horror-Aesthetik", "Mumie",
+     "Verblasstes Beige, Anthrazit", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Geisterhand", "Eine durchscheinende Geisterhand greift aus einem Nebelschleier "
+     "nach vorn, die Finger leicht gespreizt",
+     "Fans von Gothic- und Horror-Aesthetik", "Geisterhand",
+     "Nebelweiss, Anthrazit", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Kraehenschwarm", "Ein dichter Schwarm Kraehen fliegt in unruhiger Formation "
+     "vor einem kahlen, verdrehten Baum auf",
+     "Fans von Gothic- und Horror-Aesthetik", "Kraehenschwarm",
+     "Tiefschwarz, Anthrazit, Nebelgrau", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Sumpfwesen", "Ein aus Schlamm und Ranken geformtes, humanoides Sumpfwesen "
+     "steht reglos zwischen duennen Schilfhalmen",
+     "Fans von Gothic- und Horror-Aesthetik", "Sumpfmonster",
+     "Moosgruen, Anthrazit, Schlammbraun", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Schattenwesen", "Eine konturlose, rabenschwarze Schattengestalt mit zwei "
+     "gluehenden Augen loest sich von einer Hauswand",
+     "Fans von Gothic- und Horror-Aesthetik", "Schattenwesen",
+     "Tiefschwarz, Gluehrot", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Totenkopffalterschwarm", "Mehrere Nachtfalter mit totenkopfaehnlicher Zeichnung "
+     "schwaermen gemeinsam um eine einzelne brennende Kerze",
+     "Fans von Gothic- und Horror-Aesthetik", "Falterschwarm",
+     "Anthrazit, Knochenweiss, Kerzengelb", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Hexenbesen", "Ein alter Reisigbesen lehnt schraeg an einer Wand, obenauf "
+     "sitzt zusammengerollt eine schwarze Katze",
+     "Fans von Gothic- und Horror-Aesthetik", "Hexenbesen",
+     "Besenbraun, Tiefschwarz", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
+    ("Kreatur-Poltergeist", "Mehrere Gegenstaende (Stuhl, Buch, Kerze) schweben lose "
+     "verteilt in der Luft, umgeben von einem schwachen Nebelschleier",
+     "Fans von Gothic- und Horror-Aesthetik", "Poltergeist",
+     "Nebelweiss, Anthrazit, Kerzengelb", _WARUM_KREATUR, _ZEITRAUM_ALLTAG),
 )
 
 ANZAHL = len(_EINTRAEGE)

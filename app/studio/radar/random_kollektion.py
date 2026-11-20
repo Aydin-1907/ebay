@@ -102,6 +102,66 @@ _EINTRAEGE: tuple[_Eintrag, ...] = (
      "geschwungener Kontur und kleiner Gischtspitze",
      "Kaeufer, die ein ruhiges Meeres-Symbol suchen", "Welle",
      "Petrol, Weiss"),
+    ("Icon-Pfeil", "Ein einzelner geschwungener Pfeil, der leicht nach oben "
+     "rechts zeigt, mit klarer gleichmaessiger Linienstaerke",
+     "Kaeufer, die ein dynamisches, kleines Zeichen suchen", "Pfeil",
+     "Anthrazit, Gelb"),
+    ("Icon-Zahnrad", "Ein einzelnes Zahnrad mit gleichmaessigen Zacken und "
+     "rundem Mittelloch, als klare geschlossene Form",
+     "Kaeufer, die ein technisches, kleines Symbol suchen", "Zahnrad",
+     "Stahlgrau, Anthrazit"),
+    ("Icon-Schluessel", "Ein klassischer Schluessel mit rundem Griff und "
+     "einfachem Bart, als klare geschlossene Silhouette",
+     "Kaeufer, die ein schlichtes Schluessel-Symbol suchen", "Schluessel",
+     "Gold, Anthrazit"),
+    ("Icon-Kompass", "Ein runder Kompass mit vier klaren Himmelsrichtungs-"
+     "Zacken und einer mittigen Nadel",
+     "Kaeufer, die ein Reise-Symbol suchen", "Kompass",
+     "Messinggold, Nachtblau"),
+    ("Icon-Rakete", "Eine stilisierte Rakete mit spitzer Nase und drei kleinen "
+     "Flossen, dahinter eine kurze Flammenspur",
+     "Kaeufer, die ein verspieltes Weltraum-Symbol suchen", "Rakete",
+     "Rot, Silbergrau"),
+    ("Icon-Fussspur", "Eine einzelne Pfotenabdruck-Spur mit vier runden Zehen "
+     "und einem groesseren Ballen",
+     "Tierfreunde, die ein kleines Pfoten-Symbol suchen", "Pfotenabdruck",
+     "Anthrazit, Creme"),
+    ("Icon-Muschel", "Eine einzelne geriffelte Muschelschale von oben, "
+     "symmetrisch und klar konturiert",
+     "Kaeufer, die ein maritimes, kleines Symbol suchen", "Muschel",
+     "Perlweiss, Korallrosa"),
+    ("Icon-Schneeflocke", "Eine einzelne sechszackige Schneeflocke mit "
+     "gleichmaessigen, feinen Verzweigungen",
+     "Kaeufer, die ein winterliches, kleines Symbol suchen", "Schneeflocke",
+     "Eisblau, Weiss"),
+    ("Icon-Palme", "Eine einzelne schlanke Palme mit gebogenem Stamm und "
+     "wenigen grossen Wedeln als Krone",
+     "Kaeufer, die ein sommerliches Urlaubs-Symbol suchen", "Palme",
+     "Tannengruen, Sandbeige"),
+    ("Icon-Pilz", "Ein einzelner Fliegenpilz mit rundem Hut und weissen "
+     "Punkten, als klare geschlossene Silhouette",
+     "Kaeufer, die ein verspieltes Natur-Symbol suchen", "Pilz",
+     "Scharlachrot, Weiss"),
+    ("Icon-Ballon", "Ein einzelner runder Ballon mit kurzer geschwungener "
+     "Schnur, als klare geschlossene Form",
+     "Kaeufer, die ein froehliches Feier-Symbol suchen", "Ballon",
+     "Himmelblau, Gelb"),
+    ("Icon-Glocke", "Eine einzelne Glocke mit rundem Klangkoerper und kleinem "
+     "Klöppel, als klare geschlossene Silhouette",
+     "Kaeufer, die ein festliches, kleines Symbol suchen", "Glocke",
+     "Gold, Anthrazit"),
+    ("Icon-Fahrrad", "Ein einzelnes Fahrrad in vereinfachter Seitenansicht mit "
+     "zwei klaren Raedern und schlankem Rahmen",
+     "Kaeufer, die ein sportliches, kleines Symbol suchen", "Fahrrad",
+     "Petrol, Anthrazit"),
+    ("Icon-Note", "Eine einzelne Musiknote mit rundem Notenkopf und "
+     "geschwungenem Hals",
+     "Kaeufer, die ein musikalisches, kleines Symbol suchen", "Musiknote",
+     "Anthrazit, Violett"),
+    ("Icon-Glueckspilz", "Ein einzelner vierblaettriger Kleestengel mit einem "
+     "kleinen Marienkaefer darauf",
+     "Kaeufer, die ein verspieltes Glueck-Symbol suchen", "Glueckspilz",
+     "Kleegruen, Scharlachrot"),
 )
 
 ANZAHL = len(_EINTRAEGE)
