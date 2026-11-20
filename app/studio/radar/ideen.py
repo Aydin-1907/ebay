@@ -101,6 +101,36 @@ def speichere(db, quelle: Quelle, funde: Iterable[Fund]) -> dict:
     return {"neu": neu, "aufgefrischt": aufgefrischt, "quelle": quelle.schluessel}
 
 
+def _bereits_bei_ebay_gelistet(db, ideen: list[MotivIdee]) -> set[int]:
+    """design_id-Menge der Ideen, zu denen ein AKTIVES eBay-Angebot existiert.
+
+    Verlass dich nicht auf ``MotivIdee.status`` allein: "uebernommen" wird
+    schon beim Erzeugen des Bildes gesetzt (``nutzen.erzeuge_aus_idee``), nicht
+    erst beim erfolgreichen Einstellen - und ein nachgeholter eBay-Schritt bei
+    schon vorhandenem Design (siehe Sammel-Lauf-Skript) ruehrt den Status gar
+    nicht erst an. Der gleiche Fund wie beim Fortschrittsbalken (17.11.2026):
+    nur ein echtes, aktives ``PodListing`` zaehlt als "schon oben".
+    """
+    from app.studio.models import PodListing, PodProduct
+
+    design_ids = [i.design_id for i in ideen if i.design_id]
+    if not design_ids:
+        return set()
+    produkte = db.execute(
+        select(PodProduct.id, PodProduct.design_id)
+        .where(PodProduct.design_id.in_(design_ids))
+    ).all()
+    design_je_produkt = {pid: did for pid, did in produkte}
+    produkt_ids = list(design_je_produkt)
+    if not produkt_ids:
+        return set()
+    aktive = db.execute(
+        select(PodListing.product_id)
+        .where(PodListing.product_id.in_(produkt_ids), PodListing.status == "active")
+    ).scalars().all()
+    return {design_je_produkt[pid] for pid in aktive}
+
+
 def liste(db, *, status: str | None = "neu", min_signal: float | None = None,
           shop: str | None = None, quelle: str | None = None,
           limit: int = 50) -> list[MotivIdee]:
@@ -108,6 +138,10 @@ def liste(db, *, status: str | None = "neu", min_signal: float | None = None,
 
     Ideen ohne Signal stehen ganz hinten - aber sie stehen da. Sie sind nicht
     geprueft und nicht schlecht, nur unbekannt (Eiserne Regel 3).
+
+    Eine Idee mit einem echten, aktiven eBay-Angebot verschwindet IMMER aus
+    der Empfehlungsliste (auch bei explizit anderem ``status``-Filter) - wer
+    sie schon eingestellt hat, braucht sie nicht nochmal vorgeschlagen.
 
     ``shop`` grenzt auf einen Laden ein. Ohne das mischen sich ab dem zweiten
     beobachteten Shop die Funde, und die Frage "wie sieht DIESER Laden aus"
@@ -127,6 +161,9 @@ def liste(db, *, status: str | None = "neu", min_signal: float | None = None,
         frage = frage.where(MotivIdee.signal.is_not(None),
                             MotivIdee.signal >= float(min_signal))
     treffer = list(db.execute(frage).scalars().all())
+    gelistet = _bereits_bei_ebay_gelistet(db, treffer)
+    if gelistet:
+        treffer = [i for i in treffer if i.design_id not in gelistet]
     if quelle == "trend":
         # Trends haben kein Zahlensignal (kein erfundenes Suchvolumen) - geordnet
         # wird nach dem Rang der Recherche.
