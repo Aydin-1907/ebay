@@ -17,8 +17,10 @@ SCHRIFTREGEL = (
     "Der Schriftzug steht in kraeftiger, sehr gut lesbarer Druckschrift "
     "(serifenlose Blockschrift, Versalien, gleichmaessige Strichstaerke), "
     "keine Schreibschrift, keine Handschrift, keine Kalligrafie, keine "
-    "verspielten Buchstaben. Die Schriftfarbe ist reines Weiss (#FFFFFF). "
-    "Das kleine Motiv verwendet kein Weiss."
+    "verspielten Buchstaben. Die Buchstaben sind mindestens so hoch wie ein "
+    "Zehntel der gesamten Bildhoehe - aus Armlaenge Entfernung klar lesbar, "
+    "nicht nur eine feine Unterschrift. Die Schriftfarbe ist reines Weiss "
+    "(#FFFFFF). Das kleine Motiv verwendet kein Weiss."
 )
 
 DUNKEL = (17, 17, 17)

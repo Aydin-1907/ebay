@@ -57,13 +57,28 @@ _CHROMA_SAUM = 170
 
 def _chroma_entfernen(img: Image.Image) -> Image.Image:
     """Macht den magentafarbenen Erzeugungs-Hintergrund (und seinen Kantenrand-
-    Fringe) transparent, ueberall im Bild - nicht nur am Rand verbunden."""
+    Fringe) transparent, ueberall im Bild - nicht nur am Rand verbunden.
+
+    Nur die Deckkraft zu senken reichte nicht (Fund 20.11.2026): ein halb-
+    transparenter Rand-Pixel behaelt seine magentastichige Farbe, und genau
+    dieser Restton schimmert ueberall dort durch, wo das Bild spaeter auf
+    Ware/Hintergrund liegt - duenne Linien (Zeltschnuere, Grashalme) und der
+    Rand um helle Buchstaben blieben sichtbar pink. Despill zieht den
+    Magenta-Anteil (R und B ueber G) aus genau den Pixeln, die in der
+    Abstands-Saumzone liegen, OHNE die sicher opaken Motivpixel anzufassen.
+    """
     rgba = np.array(img.convert("RGBA")).astype(np.float32)
     diff = rgba[..., :3] - np.array(_CHROMA, dtype=np.float32)
     abstand = np.sqrt((diff ** 2).sum(axis=-1))
     deckkraft = np.clip((abstand - _CHROMA_KERN) / (_CHROMA_SAUM - _CHROMA_KERN), 0.0, 1.0) * 255
     rgba[..., 3] = np.minimum(rgba[..., 3], deckkraft)
-    return Image.fromarray(rgba.astype(np.uint8), "RGBA")
+
+    saum = abstand < _CHROMA_SAUM
+    r, g, b = rgba[..., 0], rgba[..., 1], rgba[..., 2]
+    spill = np.clip(np.minimum(r, b) - g, 0.0, None)
+    rgba[..., 0] = np.where(saum, r - spill, r)
+    rgba[..., 2] = np.where(saum, b - spill, b)
+    return Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), "RGBA")
 
 # Listenpreise je Bild (Stand 08/2026, grosszuegig aufgerundet). Lieber etwas zu
 # hoch ansetzen: die Kostenbremse soll frueher greifen, nicht spaeter.
