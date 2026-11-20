@@ -1072,6 +1072,14 @@ def radar_motiv_kollektion(db: Session = Depends(get_db)) -> dict:
     return motiv_kollektion.lade(db)
 
 
+@router.post("/radar/tier-kollektion")
+def radar_tier_kollektion(db: Session = Depends(get_db)) -> dict:
+    """Reine Tiermotive, realistisch und animiert, ohne Text. Kostenlos, erzeugt kein Bild."""
+    from app.studio.radar import tier_kollektion
+
+    return tier_kollektion.lade(db)
+
+
 @router.post("/radar/stadtliebe-kollektion")
 def radar_stadtliebe_kollektion(db: Session = Depends(get_db)) -> dict:
     """Minimalistische Stadtmotive (ohne Vereinsbezug) als Empfehlungen laden. Kostenlos."""
