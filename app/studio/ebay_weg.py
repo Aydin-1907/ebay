@@ -165,8 +165,21 @@ def groessen(p: Produkt, s: Settings) -> list[str]:
     return [g.strip() for g in (s.ebay_textil_groessen or "").split(",") if g.strip()]
 
 
-def farben(p: Produkt) -> list[str]:
-    return [f.name for f in mockup_plan.FARBEN] if p.textil else [TASSENFARBE]
+def farben(p: Produkt, s: Settings | None = None) -> list[str]:
+    """Aktive Farben fuer dieses Produkt.
+
+    ``s.ebay_textil_farben`` (Komma-Liste, Nutzerwunsch 20.11.2026: "nur
+    schwarz und weiss" - weniger Varianten -> weniger eBay-Verkaufswert je
+    Design, siehe Fund 20.11.2026 zum Verkaufslimit) grenzt bei Textil ein;
+    leer/None = alle Farben wie bisher.
+    """
+    if not p.textil:
+        return [TASSENFARBE]
+    alle = [f.name for f in mockup_plan.FARBEN]
+    gewuenscht = [f.strip() for f in (getattr(s, "ebay_textil_farben", "") or "").split(",") if f.strip()]
+    if not gewuenscht:
+        return alle
+    return [f for f in alle if f in gewuenscht] or alle
 
 
 def hauptfarbe(s: Settings) -> str:
@@ -561,7 +574,7 @@ def beschreibung(design: Any, p: Produkt, s: Settings, druck: str | None = None,
         rest = [f"{', '.join(n)}: {m}" for m, n in materialien.items() if m != haupt]
         punkte.insert(0, text + (f" ({'; '.join(rest)})" if rest else ""))
     if p.textil:
-        punkte.append(f"Farben: {', '.join(farben(p))}")
+        punkte.append(f"Farben: {', '.join(farben(p, s))}")
         punkte.append(f"Größen: {', '.join(groessen(p, s))}")
     if druck:
         punkte.append(druck)
@@ -731,7 +744,7 @@ async def produktfotos(design: Any, p: Produkt, *, s: Settings, bildordner: Path
             "in MOCKUP_MONTAGE_ORDNER ablegen."
         )
     haupt = hauptfarbe(s) if p.textil else TASSENFARBE
-    je_farbe: dict[str, list[Path]] = {f: [] for f in farben(p)}
+    je_farbe: dict[str, list[Path]] = {f: [] for f in farben(p, s)}
     quelle, fehlt = fotoquelle(p, s)
     gerendert = 0
     ordner = bildordner / BILD_ORDNER / str(design.id)
@@ -743,7 +756,7 @@ async def produktfotos(design: Any, p: Produkt, *, s: Settings, bildordner: Path
 
         ziel = bildordner / MOCKUP_ORDNER / str(design.id)
         vorher = set(ziel.glob("*.jpg")) if ziel.is_dir() else set()
-        farbwerte = [(f, mockup_plan.farbe(f).hex if p.textil else "#FFFFFF") for f in farben(p)]
+        farbwerte = [(f, mockup_plan.farbe(f).hex if p.textil else "#FFFFFF") for f in farben(p, s)]
         # Schrift ist weiss, nur auf HELLER Ware schwarz (Vorgabe 18.09.2026,
         # auf Helligkeit statt Namen erweitert 14.11.2026 - sonst blieb "Sand"
         # bei weisser, schlecht lesbarer Schrift).
@@ -794,7 +807,7 @@ async def produktfotos(design: Any, p: Produkt, *, s: Settings, bildordner: Path
         quelle = "mockups" if not plan.fehlt else "mockups-teilweise"
         fehlt = plan.fehlt
 
-    for f in farben(p):
+    for f in farben(p, s):
         if not je_farbe.get(f):
             hexwert = mockup_plan.farbe(f).hex if p.textil else "#FFFFFF"
             # Schrift ist weiss, nur auf heller Ware schwarz (s. Montage-Zweig oben).
@@ -887,7 +900,7 @@ async def veroeffentliche(db, design: Any, *, produkt_key: str, ebay: Any, s: Se
     eintrag = produkt_fuer(db, design, p)
     betrag, menge = angebote.preis_fuer(db, design.id, p, s), int(s.ebay_menge_je_variante)
     gr = angebote.aktive_groessen(db, design.id, p, s)
-    aktiv = angebote.aktive_farben(db, design.id, p) if p.textil else [TASSENFARBE]
+    aktiv = angebote.aktive_farben(db, design.id, p, s) if p.textil else [TASSENFARBE]
     haupt = hauptfarbe(s) if p.textil else TASSENFARBE
     if haupt not in aktiv:
         haupt = aktiv[0]
@@ -1030,7 +1043,7 @@ async def beende(db, design: Any, *, produkt_key: str, ebay: Any, s: Settings,
             await ebay.withdraw_offer(angebot["offerId"])
     if loeschen:
         if p.textil:
-            nummern = [sku(design.id, p, g, farbe=f) for f in farben(p) for g in groessen(p, s)]
+            nummern = [sku(design.id, p, g, farbe=f) for f in farben(p, s) for g in groessen(p, s)]
         else:
             nummern = [sku(design.id, p)]
         for nummer in nummern:

@@ -112,6 +112,10 @@ class Settings(BaseSettings):
     # abgefragt 13.09.2026) - ein freier Wert faellt aus dem Groessenfilter.
     # Gilt fuer T-Shirt, Polo und Hoodie; Oversize hat seinen eigenen Lauf (S-3XL).
     ebay_textil_groessen: str = "XS,S,M,L,XL,2XL,3XL"
+    # Leer = alle Farben (mockup_plan.FARBEN). Nutzerwunsch (20.11.2026):
+    # weniger Varianten je Design -> weniger eBay-Verkaufswert je Design
+    # (Fund: eBay zaehlt den Wert ueber alle Farb/Groessen-Kombinationen).
+    ebay_textil_farben: str = ""
     # War 10: bei 42 Varianten (7 Farben x 6 Groessen) je T-Shirt meldete das
     # 420 Stueck "Lagerbestand" pro Design an eBay (10.458 EUR Warenwert fuer
     # EIN Motiv bei 24,90 EUR) - obwohl bei Print-on-Demand nichts real auf

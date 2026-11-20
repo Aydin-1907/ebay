@@ -457,7 +457,7 @@ def ebay_stand(design_id: int, db: Session = Depends(get_db)) -> dict:
         quelle, fehlende = ebay_weg.fotoquelle(p, s)
         produkte.append({
             "key": p.key, "label": p.label, "preis_eur": ebay_weg.preis(p, s),
-            "groessen": ebay_weg.groessen(p, s), "farben": ebay_weg.farben(p),
+            "groessen": ebay_weg.groessen(p, s), "farben": ebay_weg.farben(p, s),
             "titel": ebay_weg.titel(design, p),
             "fotoquelle": quelle, "fehlende_vorlagen": fehlende,
             "angebot": ({"listing_id": angebot.external_id, "url": angebot.url}
@@ -501,10 +501,11 @@ def mockup_vorlagen() -> dict:
     """Welche Produktfoto-Vorlagen es gibt, mit Ansichten und Farben. Ohne Netz, ohne Kosten."""
     from app.studio import ebay_weg, mockup_montage, mockup_plan
 
-    ordner = Path(get_settings().mockup_montage_ordner)
+    s = get_settings()
+    ordner = Path(s.mockup_montage_ordner)
     produkte = []
     for p in ebay_weg.PRODUKTE.values():
-        farben = ([{"name": f.name, "hex": f.hex} for f in mockup_plan.FARBEN] if p.textil
+        farben = ([{"name": f, "hex": mockup_plan.farbe(f).hex} for f in ebay_weg.farben(p, s)] if p.textil
                   else [{"name": ebay_weg.TASSENFARBE, "hex": "#FFFFFF"}])
         produkte.append({
             "key": p.key, "label": p.label, "farben": farben,
@@ -528,10 +529,11 @@ async def mockup_flaeche(produkt: str = Query("tshirt"), seite: str = Query("vor
         raise HTTPException(status_code=404, detail=f"Unbekanntes Produkt: {produkt}")
     if seite not in ("vorne", "hinten"):
         raise HTTPException(status_code=422, detail="seite ist vorne oder hinten")
-    if farbe not in ebay_weg.farben(p):
-        farbe = ebay_weg.farben(p)[0]
-    hexwert = mockup_plan.farbe(farbe).hex if p.textil else "#FFFFFF"
     s = get_settings()
+    aktive_farben = ebay_weg.farben(p, s)
+    if farbe not in aktive_farben:
+        farbe = aktive_farben[0]
+    hexwert = mockup_plan.farbe(farbe).hex if p.textil else "#FFFFFF"
     bildordner, ordner = Path(s.studio_image_dir), Path(s.mockup_montage_ordner)
     try:
         pfad = await asyncio.to_thread(

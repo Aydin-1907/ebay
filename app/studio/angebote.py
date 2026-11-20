@@ -36,9 +36,9 @@ def optionen(db: Session, design_id: int, produkt_key: str) -> dict:
             "groessen_aus": _liste(z.groessen_aus)}
 
 
-def aktive_farben(db: Session, design_id: int, p: ebay_weg.Produkt) -> list[str]:
+def aktive_farben(db: Session, design_id: int, p: ebay_weg.Produkt, s: Settings) -> list[str]:
     aus = set(optionen(db, design_id, p.key)["farben_aus"])
-    return [f for f in ebay_weg.farben(p) if f not in aus]
+    return [f for f in ebay_weg.farben(p, s) if f not in aus]
 
 
 def aktive_groessen(db: Session, design_id: int, p: ebay_weg.Produkt, s: Settings) -> list[str]:
@@ -91,7 +91,7 @@ def setze(db: Session, s: Settings, design_id: int, produkt_key: str, *, preis_e
         if not preise.MIN_EUR <= preis <= preise.MAX_EUR:
             raise AngebotFehler(f"Der Preis muss zwischen {preise.MIN_EUR:.2f} und "
                                 f"{preise.MAX_EUR:.2f} Euro liegen.")
-    farben, groessen = ebay_weg.farben(p), ebay_weg.groessen(p, s)
+    farben, groessen = ebay_weg.farben(p, s), ebay_weg.groessen(p, s)
     f_aus = [f for f in (farben_aus or []) if f in farben]
     g_aus = [g for g in (groessen_aus or []) if g in groessen]
     if farben and len(f_aus) >= len(farben):
