@@ -221,6 +221,8 @@ Harte Regeln:
   im Fokus, Motiv klein) oder "nur_motiv" (ohne Text). Nie alle Empfehlungen gleich.
 - Sprueche sind optional, hoechstens vier Woerter, auf Deutsch und neu formuliert. Wenn Bild und Zielgruppe
   ohne Text staerker funktionieren, bleibt der Spruch leer.
+- Im Feld "spruch" stehen echte Umlaute und Eszett (Ä, Ö, Ü, ä, ö, ü, ß), NIEMALS AE, OE, UE oder SS als
+  Ersatz - der Spruch wird genau so ins Bild gedruckt.
 - Eine einzelne Produktanzeige ist kein ausreichender Nachfragebeleg. Nutze nach
   Moeglichkeit mehrere aktuelle, voneinander unabhaengige Quellen.
 - Wenn eine Empfehlung auf einem aktuellen Termin, Wettbewerb oder Trend beruht, muss

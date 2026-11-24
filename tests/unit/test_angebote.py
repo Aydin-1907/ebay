@@ -4,6 +4,11 @@ from __future__ import annotations
 import pytest
 
 from app.config import get_settings
+
+
+def _alle_farben():
+    """Diese Tests pruefen die Farb-Logik, also mit allen Farben statt nur Schwarz/Weiss."""
+    return get_settings().model_copy(update={"ebay_textil_farben": ""})
 from app.database import SessionLocal
 from app.studio import angebote, ebay_weg
 from app.studio.models import StudioDesign
@@ -31,35 +36,35 @@ def design(db):
 
 
 def test_ohne_eintrag_gelten_katalogwerte(db, design):
-    s, p = get_settings(), ebay_weg.PRODUKTE["tshirt"]
-    assert angebote.aktive_farben(db, design.id, p) == ebay_weg.farben(p)
+    s, p = _alle_farben(), ebay_weg.PRODUKTE["tshirt"]
+    assert angebote.aktive_farben(db, design.id, p, s) == ebay_weg.farben(p, s)
     assert angebote.aktive_groessen(db, design.id, p, s) == ebay_weg.groessen(p, s)
     assert angebote.preis_fuer(db, design.id, p, s) == ebay_weg.preis(p, s)
 
 
 def test_preis_farben_und_groessen_werden_gespeichert(db, design):
-    s, p = get_settings(), ebay_weg.PRODUKTE["tshirt"]
+    s, p = _alle_farben(), ebay_weg.PRODUKTE["tshirt"]
     angebote.setze(db, s, design.id, "tshirt", preis_eur="19,90".replace(",", "."),
                    farben_aus=["Sand", "Rot"], groessen_aus=["3XL"])
     assert angebote.preis_fuer(db, design.id, p, s) == 19.90
-    assert "Sand" not in angebote.aktive_farben(db, design.id, p)
-    assert "Rot" not in angebote.aktive_farben(db, design.id, p)
+    assert "Sand" not in angebote.aktive_farben(db, design.id, p, s)
+    assert "Rot" not in angebote.aktive_farben(db, design.id, p, s)
     assert "3XL" not in angebote.aktive_groessen(db, design.id, p, s)
-    assert "Schwarz" in angebote.aktive_farben(db, design.id, p)
+    assert "Schwarz" in angebote.aktive_farben(db, design.id, p, s)
 
 
 def test_leerer_preis_faellt_auf_standard_zurueck(db, design):
-    s, p = get_settings(), ebay_weg.PRODUKTE["tshirt"]
+    s, p = _alle_farben(), ebay_weg.PRODUKTE["tshirt"]
     angebote.setze(db, s, design.id, "tshirt", preis_eur=25, farben_aus=[], groessen_aus=[])
     angebote.setze(db, s, design.id, "tshirt", preis_eur=None, farben_aus=[], groessen_aus=[])
     assert angebote.preis_fuer(db, design.id, p, s) == ebay_weg.preis(p, s)
 
 
 def test_nicht_alles_abschaltbar_und_preis_geprueft(db, design):
-    s, p = get_settings(), ebay_weg.PRODUKTE["tshirt"]
+    s, p = _alle_farben(), ebay_weg.PRODUKTE["tshirt"]
     with pytest.raises(angebote.AngebotFehler):
         angebote.setze(db, s, design.id, "tshirt", preis_eur=None,
-                       farben_aus=ebay_weg.farben(p), groessen_aus=[])
+                       farben_aus=ebay_weg.farben(p, s), groessen_aus=[])
     with pytest.raises(angebote.AngebotFehler):
         angebote.setze(db, s, design.id, "tshirt", preis_eur=None, farben_aus=[],
                        groessen_aus=ebay_weg.groessen(p, s))
@@ -71,7 +76,7 @@ def test_nicht_alles_abschaltbar_und_preis_geprueft(db, design):
 
 
 def test_unbekannte_farben_werden_ignoriert(db, design):
-    s = get_settings()
+    s = _alle_farben()
     o = angebote.setze(db, s, design.id, "tshirt", preis_eur=None, farben_aus=["Pink", "Sand"],
                        groessen_aus=[])
     assert o["farben_aus"] == ["Sand"]

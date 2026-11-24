@@ -41,7 +41,9 @@ _CHROMA_TEXT = (
     "Der Hintergrund ist eine einzige, vollkommen gleichmaessige Flaeche in "
     "reinem Chroma-Magenta (#FF00FF), randscharf zum Motiv, ohne Schatten, "
     "Verlauf oder Textur. Das Motiv selbst verwendet nirgends Magenta oder "
-    "einen aehnlichen Pink-/Violettton."
+    "einen aehnlichen Pink-/Violettton. Auch hinter einem Schriftzug liegt "
+    "nur dieser Magenta-Hintergrund - keine farbige Flaeche, kein Kasten und "
+    "kein Banner hinter dem Text, sonst wird er beim Freistellen mitgedruckt."
 )
 #: Farbabstand (euklidisch im RGB-Raum, max. ca. 441). Innerhalb von KERN gilt
 #: ein Pixel als sicher Chroma (alpha 0); zwischen KERN und SAUM nimmt die

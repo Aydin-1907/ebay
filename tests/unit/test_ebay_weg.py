@@ -78,7 +78,7 @@ def _settings(tmp_path, **over) -> Settings:
     base = dict(ebay_client_id="c", ebay_client_secret="s", ebay_refresh_token="r",
                 ebay_warehouse_postal="53639", ebay_warehouse_city="Königswinter",
                 use_mocks=False, mock_ebay=False, studio_image_dir=str(tmp_path),
-                ebay_textil_groessen="S,M", ebay_preise="", ebay_produktfarbe="Schwarz",
+                ebay_textil_groessen="S,M", ebay_textil_farben="", ebay_preise="", ebay_produktfarbe="Schwarz",
                 ebay_auto_veroeffentlichen=True, dynamic_mockups_api_key="",
                 mockup_vorlagen_datei=str(tmp_path / "vorlagen.json"),
                 mockup_montage_ordner=str(tmp_path / "montage"))
@@ -584,3 +584,10 @@ def _kein_ki_text(monkeypatch):
         raise verkaufstext.VerkaufstextFehler("im Test kein Netz")
 
     monkeypatch.setattr(verkaufstext, "_ki_text", _nie)
+
+
+def test_standard_nur_schwarz_und_weiss_titelbild_schwarz():
+    """Betreiber 24.11.2026: nur Schwarz/Weiss anbieten, Titelbild zeigt das schwarze Shirt."""
+    s = Settings(_env_file=None)
+    assert ebay_weg.farben(ebay_weg.PRODUKTE["tshirt"], s) == ["Weiß", "Schwarz"]
+    assert ebay_weg.hauptfarbe(s) == "Schwarz"

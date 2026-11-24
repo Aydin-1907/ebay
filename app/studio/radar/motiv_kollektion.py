@@ -72,7 +72,7 @@ _EINTRAEGE: tuple[_Eintrag, ...] = (
      "Motorrad", "Schwarz, Chrom, Rot"),
     ("Rennrad-Huegel", "Ein grosses schlankes Rennrad ohne Markenzeichen in Seitenansicht, "
      "dahinter steigt eine einzelne Linie wie ein Hoehenprofil steil an",
-     "Noch ein Huegel.", "Rennradfahrer, die freiwillig jeden Anstieg mitnehmen", "Rennrad",
+     "Noch ein Hügel.", "Rennradfahrer, die freiwillig jeden Anstieg mitnehmen", "Rennrad",
      "Anthrazit, Signalrot, Hellgrau"),
     ("Grill-Flamme", "Ein grosser runder Holzkohlegrill mit geoeffnetem Deckel, auf dem Rost "
      "zwei Wuerstchen, darunter zuengeln stilisierte Flammen",
@@ -88,7 +88,7 @@ _EINTRAEGE: tuple[_Eintrag, ...] = (
      "Hellgrau, Nachtblau, Gold"),
     ("Camper-Freiheit", "Ein grosser kantiger Kastenwagen-Camper ohne Markenzeichen in "
      "Seitenansicht, auf dem Dach ein Surfbrett, die Schiebetuer offen",
-     "Freiheit auf Raedern.", "Vanlife-Fans und Wohnmobilfahrer, die spontan losfahren",
+     "Freiheit auf Rädern.", "Vanlife-Fans und Wohnmobilfahrer, die spontan losfahren",
      "Camper", "Mintgruen, Creme, Anthrazit"),
     ("Kanu-Ruhe", "Ein grosses Holzkanu von schraeg oben auf glattem Wasser, ein Paddel "
      "liegt quer darin, um das Boot ziehen sich zwei ruhige Wellenringe",
@@ -96,7 +96,7 @@ _EINTRAEGE: tuple[_Eintrag, ...] = (
      "Holzbraun, Petrol, Creme"),
     ("Biene-Fleissig", "Eine grosse, realistisch gezeichnete Honigbiene im Flug mit "
      "durchscheinenden Fluegeln, unter ihr haengt eine einzelne Wabe mit Honigtropfen",
-     "Fleissig. Manchmal.", "Hobbyimker und Gartenfreunde mit Sinn fuer Selbstironie",
+     "Fleißig. Manchmal.", "Hobbyimker und Gartenfreunde mit Sinn fuer Selbstironie",
      "Biene", "Honiggelb, Schwarz, Bernstein"),
     ("Steinpilz-Revier", "Ein grosser Steinpilz mit praller brauner Kappe auf einem kleinen "
      "Moospolster, daneben ein einzelnes Eichenblatt",
@@ -116,7 +116,7 @@ _EINTRAEGE: tuple[_Eintrag, ...] = (
      "Petrol, Sandbeige, Weiss"),
     ("Kletterseil-Gipfel", "Ein aufgerolltes Kletterseil mit Karabiner liegt vor einer "
      "schroffen Felswand, die in eine spitze Gipfelsilhouette ausläuft",
-     "Hoeher geht immer.", "Kletterer, die jedes Wochenende an der Wand haengen", "Klettern",
+     "Höher geht immer.", "Kletterer, die jedes Wochenende an der Wand haengen", "Klettern",
      "Steingrau, Signalrot, Anthrazit"),
     ("Segelboot-Horizont", "Ein grosses Segelboot mit gesetztem Hauptsegel gleitet seitlich "
      "ueber ruhige Wellenlinien, eine einzelne Moewe zieht darueber",
@@ -132,7 +132,7 @@ _EINTRAEGE: tuple[_Eintrag, ...] = (
      "Anthrazit, Elfenbein, Kupfer"),
     ("Globus-Fernweh", "Ein grosser alter Standglobus mit sichtbaren Laendergrenzen und "
      "einer kleinen Messingfassung am Fuss",
-     "Naechstes Ziel.", "Reisefans mit Vorliebe fuer Fernweh und alte Landkarten", "Reisen",
+     "Nächstes Ziel.", "Reisefans mit Vorliebe fuer Fernweh und alte Landkarten", "Reisen",
      "Ozeanblau, Messing, Creme"),
     ("Weinflasche-Ernte", "Eine grosse, schlanke Weinflasche mit einfachem Etikett, davor "
      "liegt eine einzelne Traubenranke mit drei Beeren",

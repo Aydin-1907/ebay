@@ -20,7 +20,13 @@ SCHRIFTREGEL = (
     "verspielten Buchstaben. Die Buchstaben sind mindestens so hoch wie ein "
     "Zehntel der gesamten Bildhoehe - aus Armlaenge Entfernung klar lesbar, "
     "nicht nur eine feine Unterschrift. Die Schriftfarbe ist reines Weiss "
-    "(#FFFFFF). Das kleine Motiv verwendet kein Weiss."
+    "(#FFFFFF). Das kleine Motiv verwendet kein Weiss. "
+    "Deutsche Umlaute und das Eszett werden exakt so gesetzt, wie sie im "
+    "Schriftzug stehen: Ä, Ö, Ü, ä, ö, ü und ß - niemals als AE, OE, UE oder SS "
+    "umschreiben, niemals die Punkte weglassen. "
+    "Die Buchstaben stehen frei direkt auf dem Hintergrund: KEIN Kasten, keine "
+    "gefuellte Flaeche, kein Banner, kein Schild, kein Etikett, keine Sprechblase "
+    "und kein Rahmen hinter oder um den Text."
 )
 
 DUNKEL = (17, 17, 17)

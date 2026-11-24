@@ -112,15 +112,15 @@ class Settings(BaseSettings):
     # abgefragt 13.09.2026) - ein freier Wert faellt aus dem Groessenfilter.
     # Gilt fuer T-Shirt, Polo und Hoodie; Oversize hat seinen eigenen Lauf (S-3XL).
     ebay_textil_groessen: str = "XS,S,M,L,XL,2XL,3XL"
-    # Leer = alle Farben (mockup_plan.FARBEN). Nutzerwunsch (20.11.2026):
-    # weniger Varianten je Design -> weniger eBay-Verkaufswert je Design
-    # (Fund: eBay zaehlt den Wert ueber alle Farb/Groessen-Kombinationen).
-    ebay_textil_farben: str = ""
+    # Komma-Liste der Farben, die bei eBay angeboten werden; leer = alle aus
+    # mockup_plan.FARBEN. Betreiber 24.11.2026: nur Schwarz und Weiss.
+    ebay_textil_farben: str = "Weiß,Schwarz"
     # Stueckzahl je Farb/Groessen-Variante bei eBay. Betreiber 24.11.2026: 2 fuer alle
     # Angebote (vorher 10, dann kurz 1). Bei Print-on-Demand liegt nichts real auf
     # Lager; eBay zaehlt die Menge aber ins monatliche Wertlimit (Fehler 25002).
     ebay_menge_je_variante: int = 2                  # auf Bestellung gedruckt
-    ebay_produktfarbe: str = "Weiß"                  # Farbe der Ware im Produktbild
+    # Farbe der Ware im Titelbild. Betreiber 24.11.2026: schwarz statt weiss.
+    ebay_produktfarbe: str = "Schwarz"
     ebay_marke: str = "medienwerk"
     # Preise inkl. Versand ueberschreiben, z. B. "tshirt=15.90,tasse=12.90".
     # Dezimalpunkt, kein Komma - das Komma trennt die Produkte.
