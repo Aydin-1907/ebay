@@ -209,8 +209,8 @@ async def test_textil_mit_farben_und_groessen(db, tmp_path):
     assert ebay.aufrufe[-1][0] == "veroeffentlichen_gruppe"
     assert e["automatisch_ergaenzt"] == ["Thema"]
     assert e["bildquelle"] == "mockups"
-    # Print-on-Demand: eBay meldet nur ein Stueck je Farb/Groessen-Variante.
-    assert db.query(PodListing).one().quantity_available == 7 * 2
+    # Print-on-Demand: eBay meldet zwei Stueck je Farb/Groessen-Variante (Betreiber 24.11.2026).
+    assert db.query(PodListing).one().quantity_available == 7 * 2 * 2
 
 
 async def test_tasse_ist_ein_einzelangebot_in_weiss(db, tmp_path):

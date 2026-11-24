@@ -116,14 +116,10 @@ class Settings(BaseSettings):
     # weniger Varianten je Design -> weniger eBay-Verkaufswert je Design
     # (Fund: eBay zaehlt den Wert ueber alle Farb/Groessen-Kombinationen).
     ebay_textil_farben: str = ""
-    # War 10: bei 42 Varianten (7 Farben x 6 Groessen) je T-Shirt meldete das
-    # 420 Stueck "Lagerbestand" pro Design an eBay (10.458 EUR Warenwert fuer
-    # EIN Motiv bei 24,90 EUR) - obwohl bei Print-on-Demand nichts real auf
-    # Lager liegt. Das riss das monatliche eBay-Wertlimit (Fund 20.11.2026,
-    # eBay-Fehler 25002) schon beim ersten Design auf. 1 ist ehrlicher (echter
-    # Bestand: null, nachbestellbar bei jeder Order) und senkt den gemeldeten
-    # Wert je Design um den Faktor 10.
-    ebay_menge_je_variante: int = 1                  # auf Bestellung gedruckt
+    # Stueckzahl je Farb/Groessen-Variante bei eBay. Betreiber 24.11.2026: 2 fuer alle
+    # Angebote (vorher 10, dann kurz 1). Bei Print-on-Demand liegt nichts real auf
+    # Lager; eBay zaehlt die Menge aber ins monatliche Wertlimit (Fehler 25002).
+    ebay_menge_je_variante: int = 2                  # auf Bestellung gedruckt
     ebay_produktfarbe: str = "Weiß"                  # Farbe der Ware im Produktbild
     ebay_marke: str = "medienwerk"
     # Preise inkl. Versand ueberschreiben, z. B. "tshirt=15.90,tasse=12.90".
@@ -314,7 +310,9 @@ class Settings(BaseSettings):
     # Listings-Anzeigenrate kommt SEPARAT dazu (ebay_ad_rate_pct) — Gesamtgebuehr real
     # gemessen ~31,4 % + 0,45 € (13.07.: #1142/#1145) = 0.22 Provision + 0.10 Anzeigen.
     ebay_fee_pct: float = 0.22
-    ebay_ad_rate_pct: float = 0.10       # Standard Promoted-Listings-Anzeigenrate je Listing (10%)
+    # Standard Promoted-Listings-Anzeigenrate je Listing. Betreiber 24.11.2026: 5 % fuer
+    # alle Angebote; neue Studio-Angebote werden beim Einstellen automatisch beworben.
+    ebay_ad_rate_pct: float = 0.05
     ebay_fixed_fee_eur: float = 0.45     # Fixkosten je Verkauf (Fixed Fee €, NETTO/ohne MwSt)
     # eBay besteuert die GESAMTE Gebuehr (Provision + Fixbetrag + Anzeigen) mit MwSt
     # (DE 19%). Ohne diesen Faktor unterschaetzt die Kalkulation die Gebuehr um ~19 %

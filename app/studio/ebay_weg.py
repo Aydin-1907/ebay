@@ -991,6 +991,14 @@ async def veroeffentliche(db, design: Any, *, produkt_key: str, ebay: Any, s: Se
         hinweise.append("Von eBay vorgegebene Merkmale pruefen: " + ", ".join(ergaenzt))
     if fotos["fehlt"]:
         hinweise.append("Fotos: " + "; ".join(fotos["fehlt"]))
+    # Jedes neue Angebot kommt in die Standard-Anzeigenkampagne (Nutzerwunsch
+    # 24.11.2026: 5 % fuer alle). Scheitert nur die Anzeige, bleibt das Angebot
+    # trotzdem live - es fehlt dann nur die Bewerbung, das steht im Hinweis.
+    if listing_id and hasattr(ebay, "set_ad_rate"):
+        try:
+            await ebay.set_ad_rate([listing_id], bid_pct=s.ebay_ad_rate_pct)
+        except Exception as exc:  # noqa: BLE001
+            hinweise.append(f"Anzeige nicht angelegt: {str(exc)[:120]}")
     eintrag.status = "active"
     eintrag.title = t
     eintrag.target_price_eur = betrag

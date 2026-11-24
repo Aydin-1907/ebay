@@ -683,6 +683,7 @@ class RealEbayClient(EbayClient):
         except Exception as exc:  # noqa: BLE001
             raise self._translate(exc) from exc
         created = existed = failed = 0
+        gruende: dict[str, str] = {}
         for r in data.get("responses") or []:
             code = int(r.get("statusCode") or 0)
             if code in (200, 201):
@@ -691,8 +692,10 @@ class RealEbayClient(EbayClient):
                 existed += 1
             else:
                 failed += 1
+                gruende[str(r.get("listingId"))] = "/".join(
+                    str(e.get("errorId")) for e in (r.get("errors") or []))
         return {"campaign_id": campaign, "rate_pct": round(rate, 1),
-                "created": created, "already": existed, "failed": failed}
+                "created": created, "already": existed, "failed": failed, "gruende": gruende}
 
     # ---------------------------------------------- Digitale Signaturen (Finances)
     _SIGNING_KEY_FILE = "./data/ebay_signing_key.json"
@@ -1094,6 +1097,32 @@ class RealEbayClient(EbayClient):
                                                     for e in (r.get("errors") or []))[:120]
                     for r in bad)[:300]
                 raise PersistentError(f"bulkUpdatePriceQuantity je SKU abgelehnt: {msg}")
+
+    async def setze_bestand(self, eintraege: list[dict], menge: int) -> None:
+        """Menge je SKU setzen - Artikelbestand UND Angebotsmenge in einem Zug.
+
+        `eintraege` = [{"sku", "offer_id"}]. Nur die Angebotsmenge zu aendern reicht
+        nicht: sie darf den Artikelbestand nicht uebersteigen, also beides setzen.
+        """
+        reqs = [{"sku": e["sku"],
+                 "shipToLocationAvailability": {"quantity": int(menge)},
+                 "offers": [{"offerId": e["offer_id"], "availableQuantity": int(menge)}]}
+                for e in eintraege]
+        headers = await self._auth_headers(content=True)
+        for i in range(0, len(reqs), self._BULK_MAX):
+            try:
+                resp = await self._http().post(f"{self._inv}/bulk_update_price_quantity",
+                                               headers=headers, json={"requests": reqs[i:i + self._BULK_MAX]})
+                resp.raise_for_status()
+            except Exception as exc:  # noqa: BLE001
+                raise self._translate(exc) from exc
+            bad = [r for r in ((resp.json() or {}).get("responses") or [])
+                   if isinstance(r, dict) and int(r.get("statusCode") or 200) >= 300]
+            if bad:
+                msg = "; ".join(f"{r.get('sku')}: " + "/".join(
+                    str(e.get("message") or e.get("errorId")) for e in (r.get("errors") or []))[:120]
+                    for r in bad)[:300]
+                raise PersistentError(f"Menge je SKU abgelehnt: {msg}")
 
     async def withdraw_offer(self, offer_id: str) -> None:
         """withdrawOffer: beendet das aktive Listing zu diesem Offer (Offer bleibt unpublished)."""
