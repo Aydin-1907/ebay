@@ -1050,15 +1050,21 @@ async def beende(db, design: Any, *, produkt_key: str, ebay: Any, s: Settings,
                 raise EbayWegFehler("Das Angebot wurde bei eBay nicht gefunden.")
             await ebay.withdraw_offer(angebot["offerId"])
     if loeschen:
+        # Ueber ALLE Farben loeschen, nicht nur die aktuell eingestellten: ein
+        # Angebot von vor der Farbauswahl (20.11.2026) traegt alle sieben, und
+        # sonst blieben dessen uebrige Varianten bei eBay liegen.
+        aktuelle = set(farben(p, s))
         if p.textil:
-            nummern = [sku(design.id, p, g, farbe=f) for f in farben(p, s) for g in groessen(p, s)]
+            nummern = [(sku(design.id, p, g, farbe=f), f in aktuelle)
+                       for f in farben(p) for g in groessen(p, s)]
         else:
-            nummern = [sku(design.id, p)]
-        for nummer in nummern:
+            nummern = [(sku(design.id, p), True)]
+        for nummer, erwartet in nummern:
             try:
                 await ebay.delete_inventory_item(nummer)
             except Exception as exc:  # noqa: BLE001 - schon weg oder nie angelegt ist kein Fehler
-                hinweise.append(f"{nummer}: {str(exc)[:80]}")
+                if erwartet:
+                    hinweise.append(f"{nummer}: {str(exc)[:80]}")
         if p.textil:
             try:
                 await ebay.delete_inventory_item_group(gruppe(design.id, p))
