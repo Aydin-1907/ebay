@@ -492,3 +492,22 @@ def test_die_oberflaeche_zeigt_den_fremden_titel_als_text(monkeypatch):
     for zeile in radar.splitlines():
         if "fremdtitel" in zeile:
             assert "innerHTML" not in zeile, zeile
+
+
+# --- eBay weist die Suchseite ab (11/2026, Shop "absenda") -------------------
+
+def test_fehlerseite_der_suche_wird_erkannt():
+    from app.studio.radar.ernte import suchseite_abgewiesen
+
+    assert suchseite_abgewiesen("Error Page | eBay", "<p>SORRY</p>")
+    assert suchseite_abgewiesen("absenda | eBay", "<p>keine Artikel</p>")
+    assert not suchseite_abgewiesen("T-Shirts | eBay", '<a href="/itm/273003237886">')
+
+
+def test_verkaufszahl_kommt_nur_aus_dem_mengenblock():
+    from app.studio.radar.ernte import verkauft_aus_mengenblock
+
+    assert verkauft_aus_mengenblock("Stückzahl:\nMehr als 10 verfügbar31 verkauft") == 31
+    assert verkauft_aus_mengenblock("Mehr als 10 verfügbar") is None
+    assert verkauft_aus_mengenblock("") is None
+    assert verkauft_aus_mengenblock(None) is None

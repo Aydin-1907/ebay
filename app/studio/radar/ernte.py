@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from app.studio.radar.quellen import Quelle
 
@@ -256,7 +256,54 @@ async def _artikelliste(page, quelle: Quelle, url: str, *, timeout_ms: int) -> s
     ziel = suchseite(treffer.group(1), url)
     await page.goto(ziel, wait_until="domcontentloaded", timeout=timeout_ms)
     await page.wait_for_timeout(4000)
-    return ziel
+    if not suchseite_abgewiesen(await page.title(), await page.content()):
+        return ziel
+    # Seit 11/2026 liefert eBay dem Radar-Browser auf der Suchseite eine
+    # "Error Page" (geprueft am Shop "absenda"). Die Shopseite selbst laedt
+    # weiter und zeigt rund 200 Artikel - ohne Verkaufszahlen, die holt
+    # ``_verkauft_von_artikelseiten`` nach.
+    logger.warning("suchseite abgewiesen, lese die shopseite",
+                   extra={"quelle": quelle.schluessel})
+    await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+    await page.wait_for_timeout(4000)
+    return url
+
+
+def suchseite_abgewiesen(titel: str, html: str) -> bool:
+    """eBays Fehlerseite statt Trefferliste?"""
+    return "error page" in (titel or "").lower() or "/itm/" not in (html or "")
+
+
+#: Auf der Artikelseite steht die eigene Verkaufszahl im Mengenblock
+#: ("Mehr als 10 verfuegbar31 verkauft"). Woanders auf derselben Seite stehen
+#: die Gesamtverkaeufe des Haendlers ("28.866 Artikel verkauft") und Zahlen aus
+#: Empfehlungs-Karussells - die duerfen NIE als Zahl des Artikels gelten.
+_MENGENBLOCK = "() => { const e = document.querySelector('.x-quantity'); return e ? e.innerText : ''; }"
+MAX_ARTIKELSEITEN = 60
+
+
+def verkauft_aus_mengenblock(text: str | None) -> int | None:
+    """Verkaufszahl aus dem Mengenblock einer eBay-Artikelseite; sonst Luecke."""
+    return _erste_zahl(_VERKAUFT, text or "")
+
+
+async def _verkauft_von_artikelseiten(page, funde: list[Fund], *,
+                                      timeout_ms: int) -> list[Fund]:
+    """Fehlende Verkaufszahlen von den Artikelseiten holen - nur lesen."""
+    raus: list[Fund] = []
+    for i, fund in enumerate(funde):
+        if fund.verkauft is not None or not fund.url or i >= MAX_ARTIKELSEITEN:
+            raus.append(fund)
+            continue
+        try:
+            await page.goto(fund.url, wait_until="domcontentloaded", timeout=timeout_ms)
+            await page.wait_for_timeout(1500)
+            zahl = verkauft_aus_mengenblock(await page.evaluate(_MENGENBLOCK))
+        except Exception:  # noqa: BLE001 - eine Seite darf die Ernte nicht kippen
+            logger.warning("artikelseite nicht lesbar", extra={"url": fund.url})
+            zahl = None
+        raus.append(replace(fund, verkauft=zahl) if zahl is not None else fund)
+    return raus
 
 
 def suchseite(verkaeufer: str, shop_url: str) -> str:
@@ -301,7 +348,8 @@ async def ernte(quelle: Quelle, *, limit: int = 40, nur_verkauft: bool = False,
         ctx, browser = await _kontext(p)
         try:
             page = await ctx.new_page()
-            await _artikelliste(page, quelle, url, timeout_ms=timeout_ms)
+            gelesen = await _artikelliste(page, quelle, url, timeout_ms=timeout_ms)
+            shopseite = quelle.plattform == "ebay" and "/str/" in gelesen
             if "signin." in (page.url or ""):
                 raise ErnteFehler(
                     "Die Seite verlangt eine Anmeldung. Fuer verkaufte Artikel "
@@ -333,13 +381,21 @@ async def ernte(quelle: Quelle, *, limit: int = 40, nur_verkauft: bool = False,
                     "vermutlich abgewiesen (Bot-Schutz)."
                     if laenge < 200 else
                     "Kein einziger Artikel lesbar - Seitenaufbau unbekannt.")
+
+            funde = [deute(r["text"], titel=r["titel"], url=r["url"], platz=i,
+                           plattform=quelle.plattform, bild_url=r.get("bild"))
+                     for i, r in enumerate(roh[:limit], start=1)]
+            if shopseite:
+                funde = await _verkauft_von_artikelseiten(page, funde, timeout_ms=timeout_ms)
         finally:
             await ctx.close()
             if browser is not None:
                 await browser.close()
 
+    if nur_verkauft and shopseite:
+        # Auf der Shopseite greift eBays Verkauft-Filter nicht; "nur verkauft"
+        # heisst dann: nur Artikel mit nachgewiesener Verkaufszahl.
+        funde = [f for f in funde if f.verkauft]
     logger.info("radar geerntet",
-                extra={"quelle": quelle.schluessel, "anzahl": len(roh)})
-    return [deute(r["text"], titel=r["titel"], url=r["url"], platz=i,
-                  plattform=quelle.plattform, bild_url=r.get("bild"))
-            for i, r in enumerate(roh[:limit], start=1)]
+                extra={"quelle": quelle.schluessel, "anzahl": len(funde)})
+    return funde
