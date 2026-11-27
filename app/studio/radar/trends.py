@@ -41,6 +41,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from sqlalchemy import select
 
 from app.studio.generation import motivregeln
+from app.studio.radar import marktbild
 from app.studio.models import MotivIdee
 from app.studio.postprocess.schriftfarbe import SCHRIFTREGEL
 
@@ -48,7 +49,9 @@ logger = logging.getLogger("app.studio.radar.trends")
 
 PLATTFORM = "trend"
 SHOP = "websuche"
-KOSTEN_JE_LAUF_USD = 0.05
+# Echter Wert laut OpenAI-Abrechnung (27.11.2026): 13 Laeufe mit gpt-5.5 kosteten
+# 4,99 $ (Output 2,82, Input 1,73, Suchaufrufe 0,42) - rund 0,38 $ je Lauf.
+KOSTEN_JE_LAUF_USD = 0.40
 _MARKDOWN_QUELLE = re.compile(r"\s*\(?\[[^\]]+\]\((https?://[^)\s]+)\)\)?")
 KATEGORIEN = {
     "mix": "Ausgewogener Mix",
@@ -61,7 +64,16 @@ KATEGORIEN = {
     "stadtliebe": "Stadtliebe",
     "funshirt": "Fun-Shirt-Sprueche",
     "videospiele": "Videospiele (Trend)",
+    "rentner": "Rentner & Ruhestand",
 }
+
+# Kategorien, die der Mix verteilt. Stadtliebe, Fun-Shirts und Rentner laufen nur einzeln.
+_MIX_IDS = ("fussball", "zeichen", "anime", "gothic", "astronomie", "sonntag", "videospiele")
+
+
+def ausgabe_ids(kategorie: str) -> list[str]:
+    """Erlaubte Kategorie-IDs in der Antwort: bei Einzelkategorie genau diese."""
+    return list(_MIX_IDS) if kategorie == "mix" else [kategorie]
 
 
 AUFBAUTEN = {
@@ -69,6 +81,10 @@ AUFBAUTEN = {
     "spruch": "Spruch im Fokus",
     "nur_motiv": "Nur Motiv",
 }
+
+
+class WebsucheAus(RuntimeError):
+    """Die OpenAI-Websuche ist abgeschaltet (``trend_websuche_aktiv``)."""
 
 
 class TrendFehler(RuntimeError):
@@ -140,8 +156,9 @@ Pseudozeichen, keine fremden Marken und kein kultureller Mischmasch. Das Zeichen
 Hauptfokus; hoechstens ein kleiner ruhiger Pinsel- oder Siegeleindruck als Nebenelement.""",
         "anime": """ANIME: Ausschliesslich neu erfundene erwachsene Figuren ohne Bezug zu
 bekannten Serien, Studios oder Charakteren. Eine Figur, glaubwuerdige Anatomie, ruhige
-ausdrucksstarke Pose, hochwertiges realistisches Manga-/Anime-Rendering; niemals Chibi,
-Kawaii, kindliche Proportionen, Action-Collage oder ueberladene Effekte.""",
+ausdrucksstarke Pose. Stil frei nach Markt: von realistischem Manga-Rendering bis Kawaii
+und Chibi (auf dem Markt vorn: niedliche Tiere, Ramen, Alltagsobjekte). Niemals
+sexualisiert, keine Action-Collage, keine ueberladenen Effekte.""",
         "gothic": """GOTH / GOTHIC: Erwachsene, elegante dunkle Aesthetik mit einem klaren
 Hauptsymbol, etwa anatomisch glaubwuerdiger Rabe, Motte, Rose, Kathedralbogen oder
 Mondsichel. Realistische Texturen und kontrollierte Schattierung, kein Comic-Horror, kein
@@ -165,6 +182,14 @@ Genres (Roguelike, Souls-like, Battle Royale, Sandbox), Mechaniken (Respawn, Loo
 Speedrun, Permadeath), Ritualen (Nachtschicht-Zocken, Rage-Quit, Clutch-Moment, Ladebildschirm-
 Geduld) und Insider-Humor, der Gamer uebergreifend teilen. Ein Hauptelement, klare Silhouette,
 kein Controller- oder Konsolen-Logo irgendeiner Marke.""",
+        "rentner": """RENTNER & RUHESTAND: Motive und kurze, selbst formulierte deutsche Sprueche
+fuer Menschen im oder kurz vor dem Ruhestand und fuer die, die sie beschenken: Abschied aus
+dem Job, Renteneintritt, runder Geburtstag, Grosseltern-Rolle, endlich Zeit fuer Hobbys
+(Garten, Angeln, Wohnmobil, Radtour, Wandern, Werkstatt, Enkel). Humor mit Augenzwinkern und
+Stolz auf das Erreichte, liebevoll statt abwertend: keine Witze ueber Krankheit, Gebrechen,
+Vergesslichkeit oder Tod. Keine abgedroschenen Standardsprueche, die es tausendfach gibt.
+Wechsle den Bildaufbau ab: grosses Motiv (z. B. Liegestuhl, Angelrute, Wohnmobil) mit
+hoechstens drei Woertern darunter, oder der Spruch im Fokus mit kleinem Symbol.""",
     }
     if kategorie == "mix":
         verteilung = ("Bei sieben Empfehlungen liefere genau je eine aus Fußball, Zeichen, "
@@ -203,6 +228,8 @@ wirklich tragen oder verschenken moechte.
 Gewaehlte Kategorie: {KATEGORIEN[kategorie]}
 {_kategorie_auftrag(kategorie, anzahl)}
 
+{marktbild.fuer(kategorie)}
+
 Harte Regeln:
 - KEINE Marken, Firmen, Vereine, Sportclubs, Serien, Filme, Spieletitel, Figuren,
   Promis, Logos, Songtexte oder geschuetzte Sprueche - auch nicht angedeutet.
@@ -210,10 +237,10 @@ Harte Regeln:
 - Keine generische Landschaft und keine Ansammlung vieler Details. Genau ein Hauptmotiv,
   hoechstens ein kleines Nebenelement, 2-4 Farben, klare Außenkontur, viel Negativraum und
   eine geschlossene freigestellte Silhouette. Kein Hintergrund und keine Szenerie.
-- Ausser in der Kategorie Anime: realistische erwachsene Bildsprache, natuerliche
-  Proportionen, glaubwuerdige Materialien und kontrollierte Schattierung wie eine moderne
-  Editorial- oder Siebdruckillustration. Keine Cartoon-, Clipart-, Kinderbuch-, Chibi- oder
-  Kawaii-Optik. Anime bleibt eigenstaendig, erwachsen, anatomisch glaubwuerdig und reduziert.
+- Stil ist frei: realistisch, Linienzeichnung, Retro, Cartoon, Comic, Kawaii, Chibi oder
+  Pixel-Art - waehle, was in der Nische auf dem Markt verkauft (siehe Marktbild), und nenne
+  ihn im Feld stil. Grenze ist, was eBay erlaubt: nichts Sexualisiertes, keine Gewalt-
+  verherrlichung, keine Hass- oder Extremismus-Symbole, keine fremden Rechte.
 - Kein Kleidungsstueck, keine Tasse, kein Mockup und kein Mensch, der Ware traegt, im Bild.
 - Bildaufbau abwechseln (Feld aufbau): ungefaehr die Haelfte "motiv" (ein grosses
   Hauptmotiv als Blickfang, darunter ein kleiner Schriftzug mit hoechstens drei Woertern,
@@ -234,10 +261,10 @@ Sortiere die finale Auswahl nach begruendeter Verkaufschance. Platz 1 muss der i
 staerkste, nicht einfach der lauteste oder aktuellste Vorschlag sein. Schreibe knapp:
 Motiv 18-45 Woerter, Begruendung hoechstens 22 Woerter, alle anderen Textfelder hoechstens
 18 Woerter. Jede Ausgabe traegt als kategorie exakt eine dieser IDs:
-fussball, zeichen, anime, gothic, astronomie, sonntag, videospiele.{zusatz}"""
+{", ".join(ausgabe_ids(kategorie))}.{zusatz}"""
 
 
-def antwort_format(anzahl: int) -> dict:
+def antwort_format(anzahl: int, kategorie: str = "mix") -> dict:
     """Strenges Ausgabeformat fuer reproduzierbare, vollstaendige Empfehlungen."""
     text = {"type": "string"}
     return {
@@ -254,14 +281,14 @@ def antwort_format(anzahl: int) -> dict:
                         "type": "object", "additionalProperties": False,
                         "properties": {
                             "thema": {**text, "description": "Praegnanter eigener Konzeptname, 2-5 Woerter"},
-                            "kategorie": {**text, "enum": ["fussball", "zeichen", "anime", "gothic", "astronomie", "sonntag", "videospiele"]},
+                            "kategorie": {**text, "enum": ausgabe_ids(kategorie)},
                             "warum": {**text, "description": "Konkretes Nachfragesignal mit Anlass oder Beleg, keine Floskel"},
                             "zeitraum": {**text, "description": "Sinnvolles Verkaufsfenster oder immergruen"},
                             "zielgruppe": {**text, "description": "Spezifische Personengruppe, niemals nur Erwachsene"},
                             "kaufmoment": {**text, "description": "Wer kauft es wann fuer wen und warum"},
                             "verkaufswinkel": {**text, "description": "Was die Idee von gaengigen Standardmotiven unterscheidet"},
                             "motiv": {**text, "description": "Reduzierter druckbarer Bildaufbau, genau ein Fokus, 18-45 Woerter"},
-                            "stil": {**text, "description": "Realistische erwachsene Print-Illustration; bei Anime glaubwuerdiges erwachsenes Anime-Rendering"},
+                            "stil": {**text, "description": "Machart, frei gewaehlt nach Markt: z. B. realistisch, Linienzeichnung, Retro, Cartoon, Kawaii, Pixel-Art"},
                             "farben": {"type": "array", "minItems": 2, "maxItems": 4,
                                        "items": {"type": "string"}},
                             "spruch": {**text, "description": "Optionaler neuer deutscher Kurzspruch oder leer"},
@@ -432,13 +459,6 @@ def qualitaetsgrund(t: Trend, erwartete_kategorie: str = "mix") -> str | None:
     ]).split())
     if gesamttiefe < 40:
         return "Empfehlung ist insgesamt nicht tief genug begruendet"
-    stil_klein = t.stil.lower()
-    realistisch = any(w in stil_klein for w in (
-        "realistisch", "naturalistisch", "glaubwuerdig", "editorial", "siebdruck"
-    ))
-    if t.kategorie != "anime" and not realistisch and any(w in stil_klein for w in (
-            "cartoon", "comic", "chibi", "kawaii", "kinderbuch", "animiert")):
-        return "Stil wirkt zu animiert statt realistisch"
     if t.aufbau == "nur_motiv" and t.spruch.strip():
         return "Aufbau 'nur Motiv' hat trotzdem einen Spruch"
     if t.aufbau == "motiv" and len(t.spruch.split()) > 3:
@@ -464,9 +484,8 @@ def qualitaetsgrund(t: Trend, erwartete_kategorie: str = "mix") -> str | None:
 
 def prompt_aus(t: Trend) -> str:
     """Die Bildanweisung, die beim Klick auf 'Erzeugen' an das Bildmodell geht."""
-    grundstil = ("Eigenstaendige, reduzierte erwachsene Anime-Illustration mit "
-                 "glaubwuerdiger Anatomie" if t.kategorie == "anime" else
-                 "Eigenstaendige, reduzierte realistische Print-Illustration")
+    grundstil = ("Eigenstaendige, reduzierte Anime-Illustration" if t.kategorie == "anime"
+                 else "Eigenstaendige, reduzierte Print-Illustration")
     teile = [f"{grundstil}. Bildinhalt: {t.motiv.rstrip(' .')}"]
     if t.stil:
         teile.append(f"Machart: {t.stil.rstrip(' .')}")
@@ -510,7 +529,7 @@ async def recherchiere(*, api_key: str, modell: str, anzahl: int, heute: date,
             tools=[{"type": "web_search", "search_context_size": "high",
                     "user_location": {"type": "approximate", "country": "DE"}}],
             input=anweisung(anzahl, heute, kategorie, marktkontext=marktkontext),
-            text={"format": antwort_format(anzahl)},
+            text={"format": antwort_format(anzahl, kategorie)},
             include=["web_search_call.action.sources"],
             store=False,
             **modell_parameter,
@@ -647,6 +666,9 @@ async def lauf(db, *, s: Any, anzahl: int | None = None, client: Any = None,
     anzahl = max(3, min(int(anzahl or s.trend_anzahl), 20))
     if kategorie not in KATEGORIEN:
         raise TrendFehler(f"Unbekannte Kategorie: {kategorie}")
+    if not getattr(s, "trend_websuche_aktiv", True):
+        raise WebsucheAus("Die OpenAI-Websuche ist abgeschaltet (kostete rund 0,38 $ je Lauf). "
+                          "Neue Ideen schreibt Claude - sie werden kostenlos geladen.")
     if kostenbremse:
         kosten.pruefe(db, KOSTEN_JE_LAUF_USD)
 

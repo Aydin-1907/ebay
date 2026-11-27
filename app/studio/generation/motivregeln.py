@@ -75,18 +75,28 @@ ZUSATZ = (
     "keine Schlagschatten."
 )
 
+# Stil ist frei (Betreiber, 27.11.2026: "alles was ebay erlaubt kann gemacht
+# werden"). Ohne Stilwunsch bleibt die realistische Machart die Vorgabe; wer
+# Cartoon, Kawaii, Chibi, Comic oder Pixel verlangt, bekommt genau das.
 REALISMUS_ZUSATZ = (
-    "Realistische, erwachsene Bildsprache mit natuerlichen Proportionen, "
-    "glaubwuerdigen Oberflaechen und kontrollierter Schattierung; hochwertig "
-    "wie eine moderne Editorial- oder Siebdruckillustration. Keine Cartoon-, "
-    "Clipart-, Kinderbuch-, Chibi- oder Kawaii-Optik."
+    "Realistische Bildsprache mit natuerlichen Proportionen, glaubwuerdigen "
+    "Oberflaechen und kontrollierter Schattierung; hochwertig wie eine moderne "
+    "Editorial- oder Siebdruckillustration."
+)
+
+FREISTIL_ZUSATZ = (
+    "Sauber ausgefuehrt im verlangten Stil, klare Konturen und flaechige, "
+    "druckbare Farben; niemals sexualisiert."
 )
 
 ANIME_ZUSATZ = (
-    "Eigenstaendige erwachsene Anime-/Manga-Illustration mit glaubwuerdiger "
-    "Anatomie, ruhiger Mimik und kontrollierter Schattierung; nicht chibi, "
-    "nicht niedlich und keine bekannte Figur."
+    "Eigenstaendige Anime-/Manga-Illustration in einem eigenen Stil, keine "
+    "bekannte Figur und kein erkennbarer Serienstil; niemals sexualisiert."
 )
+
+_FREISTIL = re.compile(
+    r"\b(?:cartoon\w*|comic\w*|kawaii|chibi|niedlich\w*|s(?:ü|ue)(?:ss|ß)\w*|"
+    r"cute|pixel\w*|8-?bit|clipart|animiert\w*|doodle\w*)\b", flags=re.IGNORECASE)
 
 
 class MotivartFehler(ValueError):
@@ -166,9 +176,12 @@ def schaerfe(prompt: str) -> str:
     Neigung des Modells dazu.
     """
     roh = (prompt or "").strip()
-    stilzusatz = (ANIME_ZUSATZ if re.search(r"\b(?:anime|manga)\b", roh,
-                                           flags=re.IGNORECASE)
-                   else REALISMUS_ZUSATZ)
+    if re.search(r"\b(?:anime|manga)\b", roh, flags=re.IGNORECASE):
+        stilzusatz = ANIME_ZUSATZ
+    elif _FREISTIL.search(roh):
+        stilzusatz = FREISTIL_ZUSATZ
+    else:
+        stilzusatz = REALISMUS_ZUSATZ
     if not roh:
         return f"{stilzusatz} {ZUSATZ}"
     # Auf den Zusatz OHNE Schlusspunkt pruefen und den Text UNVERAENDERT

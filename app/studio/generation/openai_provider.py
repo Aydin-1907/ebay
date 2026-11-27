@@ -82,9 +82,11 @@ def _chroma_entfernen(img: Image.Image) -> Image.Image:
     rgba[..., 2] = np.where(saum, b - spill, b)
     return Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), "RGBA")
 
-# Listenpreise je Bild (Stand 08/2026, grosszuegig aufgerundet). Lieber etwas zu
-# hoch ansetzen: die Kostenbremse soll frueher greifen, nicht spaeter.
-_PREIS_USD = {"low": 0.02, "medium": 0.04, "high": 0.08, "auto": 0.08}
+# Preise je Bild. "medium" ist gemessen: OpenAI-Abrechnung November 2026 ergab
+# 8,63 $ fuer 154 Bilder (Bild-Output + Prompt-Input) = 0,056 $ je Bild. Die
+# anderen Stufen sind im selben Verhaeltnis hochgesetzt. Lieber etwas zu hoch:
+# die Kostenbremse soll frueher greifen, nicht spaeter.
+_PREIS_USD = {"low": 0.03, "medium": 0.06, "high": 0.12, "auto": 0.12}
 
 
 class OpenAIProvider:
@@ -131,7 +133,9 @@ class OpenAIProvider:
             code = getattr(exc, "code", None)
             if status == 401:
                 detail = "OpenAI hat den API-Schluessel abgelehnt. OPENAI_API_KEY pruefen."
-            elif code in {"insufficient_quota", "billing_hard_limit_reached", "billing_limit_user_error"}:
+            elif (code in {"insufficient_quota", "billing_hard_limit_reached", "billing_limit_user_error"}
+                  # gpt-image-2 meldet leeres Guthaben als 429 OHNE diesen Code, nur im Text
+                  or "no credits" in str(exc).lower() or "billing" in str(exc).lower()):
                 detail = "OpenAI-API-Guthaben oder Kontolimit erschoepft. Das lokale Tagesbudget ist davon unabhaengig."
             elif status == 429:
                 # Kein Guthabenproblem (das faengt der Zweig darueber), sondern zu viele

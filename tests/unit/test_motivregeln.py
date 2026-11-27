@@ -76,15 +76,21 @@ def test_schaerfe_haengt_die_ausschluesse_an():
     assert "transparentem Hintergrund" in ergebnis
     assert "kein T-Shirt" in ergebnis
     assert "kein Mockup" in ergebnis
-    assert "Realistische, erwachsene Bildsprache" in ergebnis
-    assert "Keine Cartoon-" in ergebnis
+    assert "Realistische Bildsprache" in ergebnis      # Vorgabe ohne Stilwunsch
 
 
-def test_anime_bekommt_erwachsene_anime_regeln_statt_chibi():
+def test_cartoon_wunsch_bekommt_freistil_statt_realismus():
+    ergebnis = motivregeln.schaerfe("kawaii Katze mit Ramen-Schale")
+    assert "verlangten Stil" in ergebnis
+    assert "Realistische Bildsprache" not in ergebnis
+    assert "niemals sexualisiert" in ergebnis
+
+
+def test_anime_bleibt_eigenstaendig_und_nie_sexualisiert():
     ergebnis = motivregeln.schaerfe("originale Anime-Kriegerin im Profil")
     assert "Anime-/Manga-Illustration" in ergebnis
-    assert "glaubwuerdiger Anatomie" in ergebnis
-    assert "nicht chibi" in ergebnis
+    assert "keine bekannte Figur" in ergebnis
+    assert "niemals sexualisiert" in ergebnis
 
 
 def test_schaerfe_haengt_nicht_doppelt_an():

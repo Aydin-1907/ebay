@@ -65,6 +65,7 @@ def _filter(text):
 
 def _s(**over):
     over.setdefault("trend_kritiker_aktiv", False)
+    over.setdefault("trend_websuche_aktiv", True)   # Vorgabe ist seit 27.11.2026 AUS
     return Settings(_env_file=None, openai_api_key="k", trend_modell="gpt-5.5",
                     trend_anzahl=12, **over)
 
@@ -111,7 +112,7 @@ async def test_lauf_legt_gepruefte_vorschlaege_ohne_bild_ab(db):
     erste = liste[0]
     assert erste.platz == 1 and erste.signal is None                        # kein erfundenes Volumen
     assert erste.status == "neu" and erste.design_id is None
-    assert "Eigenstaendige, reduzierte realistische Print-Illustration" in erste.eigener_prompt
+    assert "Eigenstaendige, reduzierte Print-Illustration" in erste.eigener_prompt
     assert 'Schriftzug "Ruhe am Haken"' in erste.eigener_prompt
     d = json.loads(erste.beschreibung)
     assert d["ebay_angebote"] == 4321 and d["quellen"] == ["https://beispiel.de/trend"]
@@ -165,14 +166,13 @@ def test_ideen_sind_kurz_realistisch_und_nicht_ueberladen():
     assert "Genau ein Hauptmotiv" in auftrag
     assert "hoechstens ein kleines Nebenelement" in auftrag
     assert "Motiv 18-45 Woerter" in auftrag
-    assert "Keine Cartoon-" in auftrag
+    assert "Stil ist frei" in auftrag
+    assert "nichts Sexualisiertes" in auftrag
 
 
-def test_animierter_stil_fliegt_ausserhalb_von_anime_raus():
+def test_cartoon_stil_ist_jetzt_erlaubt():
     eintrag = _eintrag("Rabenwache", kategorie="gothic", stil="niedlicher Comic Cartoon")
-    assert trends.qualitaetsgrund(trends.aus_eintrag(eintrag), "gothic") == (
-        "Stil wirkt zu animiert statt realistisch"
-    )
+    assert trends.qualitaetsgrund(trends.aus_eintrag(eintrag), "gothic") is None
 
 
 def test_anime_bleibt_als_eigene_erwachsene_kategorie_erlaubt():

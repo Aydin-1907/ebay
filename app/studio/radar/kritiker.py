@@ -54,9 +54,10 @@ def pruefe_regeln(t: Trend) -> str | None:
 def _auftrag(t: Trend) -> str:
     return f"""Du bist ein strenger, erfahrener Einkaeufer fuer Print-on-Demand-Mode
 (T-Shirts, Hoodies, Tassen) in Deutschland. Dir wird GENAU EIN Vorschlag vorgelegt.
-Deine einzige Aufgabe: ehrlich einschaetzen, ob das WIRKLICH gut verkaufen wuerde -
-nicht, ob es plausibel klingt. Die meisten Vorschlaege sind Durchschnitt; lehne
-Durchschnitt konsequent ab.
+Deine einzige Aufgabe: ehrlich einschaetzen, ob das gut verkaufen wuerde - nicht, ob
+es originell klingt. Ein Format, das auf dem Marktplatz sichtbar verkauft (z. B.
+Rente mit Jahreszahl, Herzschlag-Linie, Hobby-Wortspiel, Wochenplan), ist ein PLUS,
+kein Mangel: Kaeufer suchen genau danach. Entscheidend ist ein eigener Text.
 
 Vorschlag:
 Thema: {t.thema}
@@ -66,12 +67,14 @@ Verkaufswinkel (was ihn von Standardmotiven unterscheidet): {t.verkaufswinkel}
 Motiv: {t.motiv}
 Spruch: {t.spruch or "(keiner)"}
 
-Lehne ab, wenn mindestens eines zutrifft:
-- Die Zielgruppe ist austauschbar (koennte auf zehn andere Motive genauso passen).
-- Der "Verkaufswinkel" ist keiner - er beschreibt nur das Motiv nochmal.
-- Es gibt vermutlich schon zu viele sehr aehnliche Motive im Markt (gleiche Pose,
-  gleicher Spruchaufbau wie unzaehlige andere POD-Shirts).
-- Der Kaufmoment ist vage ("fuer alle, die X mögen" statt eines konkreten Anlasses).
+Lehne NUR ab, wenn mindestens eines zutrifft:
+- Es gibt keinen erkennbaren Kaeufer oder Anlass (weder Hobby, Rolle, Lebensphase
+  noch Geschenkmoment).
+- Der Spruch ist ein bekannter fremder Spruch, Slogan oder Zitat woertlich oder fast
+  woertlich (gleiches Format mit eigenem Text ist erlaubt).
+- Der Spruch ist grammatisch falsch, unverstaendlich oder beleidigend.
+- Motiv und Spruch passen nicht zusammen.
+Sonst: bestehen.
 
 Antworte NUR als JSON: {{"bestehen": true/false, "begruendung": "hoechstens 20 Woerter"}}"""
 
@@ -99,7 +102,7 @@ async def urteile(t: Trend, *, api_key: str, modell: str, client: Any = None) ->
         return True, ""
     finally:
         if eigener:
-            await client.aclose()
+            await client.close()        # AsyncOpenAI kennt close(), kein aclose()
 
 
 async def filtere(trends: list[Trend], *, api_key: str, modell: str,

@@ -938,10 +938,23 @@ async def radar_trends(body: TrendLaufIn, db: Session = Depends(get_db)) -> dict
     try:
         return await trends.lauf(db, s=get_settings(), anzahl=body.anzahl,
                                  kategorie=body.kategorie)
+    except trends.WebsucheAus as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except kosten.BudgetErschoepft as exc:
         raise HTTPException(status_code=429, detail=str(exc)) from exc
     except trends.TrendFehler as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/radar/eigene-ideen")
+def radar_eigene_ideen(db: Session = Depends(get_db)) -> dict:
+    """Von Claude geschriebene Ideen aus data/eigene_ideen/ laden. Kostenlos, erzeugt kein Bild."""
+    from app.studio.radar import eigene_ideen
+
+    try:
+        return eigene_ideen.lade(db)
+    except eigene_ideen.IdeenDateiFehler as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/radar/hype-puls")

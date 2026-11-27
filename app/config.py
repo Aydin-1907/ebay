@@ -141,6 +141,10 @@ class Settings(BaseSettings):
     # und unterstuetzt Websuche + Structured Output. Der guenstige Mini-Lauf
     # lieferte zu oft nur generische Themenlisten.
     trend_modell: str = "gpt-5.5"
+    # Nutzerwunsch (27.11.2026): keine OpenAI-Websuche mehr, Ideen schreibt Claude
+    # (app/studio/radar/eigene_ideen.py). Ein Lauf kostete real ~0,38 $.
+    # TREND_WEBSUCHE_AKTIV=true schaltet sie wieder ein.
+    trend_websuche_aktiv: bool = False
     # Motivname + Beschreibung fuer eBay (app/studio/verkaufstext.py) - sieht das Motivbild.
     verkaufstext_modell: str = "gpt-4.1-mini"
     # Eine kleine kuratierte Auswahl ist nuetzlicher als zwoelf oberflaechliche Karten.
